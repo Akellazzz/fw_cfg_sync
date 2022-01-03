@@ -1,0 +1,14 @@
+USERNAME = "aaa"
+PASSWORD = "aaa"
+ACTIVE_FW = "192.168.88.111"
+STANDBY_FW = "192.168.88.112"
+
+SWITCH = "192.168.88.111"
+SHOW_ROUTE_CMD = "sh route"  # TODO
+ROUTE = "192.168.88.0"
+
+IS_CONTEXT = True
+SYSTEM_CONTEXT = "192.168.88.113"
+CONTEXT_NAME = "test"
+CONTEXT_COMMANDS = ["changeto system", f"sh run context {CONTEXT_NAME}"]
+DESCRIPTION = "-= [in sync] =-"

@@ -1,0 +1,12 @@
+/.venv
+.venv
+venv
+**/.venv
+**\\.venv
+.venv\\
+__pycache__/
+__pycache__\\
+poetry_fw_cfg_sync/__pycache__
+fw_cfg_sync/tests/__pycache__
+fw_cfg_sync/logs
+fw_cfg_sync/functions/__pycache__
