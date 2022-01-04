@@ -2,14 +2,15 @@ from typing import Dict, Optional
 from pydantic import BaseModel, validator
 from ipaddress import IPv4Address
 import yaml
+from loguru import logger
 
 
 class Connection(BaseModel):
     device_type: str
     host: str
     username: str
-    password: str
-    secret: Optional[str]
+    # password: str
+    enable_required: bool
 
     @validator("host")
     def ip_address(cls, host):
@@ -21,7 +22,7 @@ class Connection(BaseModel):
 
 
 class Device(BaseModel):
-    name: Optional[str]
+    name: str
     role: Optional[str]
     connection: Connection
 

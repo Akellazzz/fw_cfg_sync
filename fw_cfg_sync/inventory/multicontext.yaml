@@ -13,8 +13,8 @@ devices:
       # host: 192.168.89.111
       host: 192.168.89.115
       username: aaa
-      password: aaa
-      secret: aaa
+      # password: aaa
+      enable_required: True
   fw_b:
     name: asa2
     role: standby
@@ -23,6 +23,6 @@ devices:
       host: 192.168.89.114
       # host: 192.168.89.115
       username: aaa
-      password: aaa
-      secret: aaa
+      # password: aaa
+      enable_required: True
     

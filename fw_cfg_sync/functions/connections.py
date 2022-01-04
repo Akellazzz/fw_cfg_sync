@@ -8,6 +8,7 @@ from netmiko import ConnectHandler, NetmikoTimeoutException
 from loguru import logger
 
 import os
+import keyring
 import sys
 import logging
 
@@ -19,13 +20,21 @@ import logging
 class BaseConnection:
     '''Базовый класс'''
 
-    def __init__(self, **kwargs):
+    # def __init__(self, **kwargs):
+    def __init__(self, name, host, username, enable_required, device_type):
         # self.__dict__.update(kwargs)
-        self.name = kwargs.get("name") if kwargs.get("name") else kwargs.get("conn").get("host")
-        self.conn = kwargs.get("conn")
-        self.is_reachable: bool
+        self.conn = {}
+        self.name = name
+        self.conn["host"] = host
+        self.conn["device_type"] = device_type
+        self.conn["username"] = username
+        self.conn["password"] = keyring.get_password(name, username)
+        if enable_required:
+            self.conn["secret"] = keyring.get_password(name, "secret")
         self.conn["allow_auto_change"] = False
-        
+
+        self.is_reachable: bool
+               
 
     @logger.catch
     def check_reachability(self):

@@ -27,10 +27,21 @@ logger.debug("That's it, beautiful and simple logging!")
 
 def set_roles(inv):
     # TODO
-    # active = Multicontext(conn = inv.devices["fw_a"]["connection"], name = inv.devices["fw_a"].get("name"))
-    active = Multicontext(conn = inv.devices["fw_a"]["connection"])
-    standby = Multicontext(conn = inv.devices["fw_b"]["connection"], name = inv.devices["fw_b"].get("name"))
-    # standby = Multicontext(conn = inv.devices["fw_b"]["connection"])
+    active = Multicontext(
+        name = inv.devices["fw_a"].get("name"),
+        host = inv.devices["fw_a"]["connection"]["host"],
+        username = inv.devices["fw_a"]["connection"]["username"],
+        device_type = inv.devices["fw_a"]["connection"]["device_type"],
+        enable_required = inv.devices["fw_a"]["connection"]["enable_required"]
+        )
+    standby = Multicontext(
+        name = inv.devices["fw_b"].get("name"),
+        host = inv.devices["fw_b"]["connection"]["host"],
+        username = inv.devices["fw_b"]["connection"]["username"],
+        device_type = inv.devices["fw_b"]["connection"]["device_type"],
+        enable_required = inv.devices["fw_b"]["connection"]["enable_required"]
+        )
+    
     return active, standby
 
 
@@ -60,8 +71,6 @@ for context in active.contexts:
 #     standby = pickle.load(f)
 
 
-
 # keyring.set_password("fw1", "aaa", "aaa")
-
-p = keyring.get_password("fw1", "aaa")
-print(p)
+# p = keyring.get_password("fw1", "aaa")
+# print(p)
