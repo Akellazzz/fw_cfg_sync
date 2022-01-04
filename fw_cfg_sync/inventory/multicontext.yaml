@@ -20,8 +20,8 @@ devices:
     role: standby
     connection:
       device_type: cisco_asa
-      # host: 192.168.89.114
-      host: 192.168.89.115
+      host: 192.168.89.114
+      # host: 192.168.89.115
       username: aaa
       password: aaa
       secret: aaa
