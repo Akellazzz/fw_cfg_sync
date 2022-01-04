@@ -58,7 +58,7 @@ def main():
         "standby_new_backup": os.path.join(dirname, "fw_configs", f"{standby}_new.txt"),
     }
     for file in fw_configs.values():
-        erase_file(file)
+        erasecleanup_file(file)
 
     save_run_cfg_locally(active_conn, fw_configs["active_backup"])
     save_run_cfg_locally(standby_conn, fw_configs["standby_old_backup"])

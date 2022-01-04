@@ -4,7 +4,7 @@ BaseConnection - базовый класс
 Multicontext - для взаимодействия с мультиконтекстными МСЭ Cisco ASA
 '''
 from datetime import datetime
-from netmiko import ConnectHandler, NetmikoTimeoutException
+from netmiko import ConnectHandler, NetmikoTimeoutException, NetmikoAuthenticationException
 from loguru import logger
 
 import os
@@ -43,11 +43,16 @@ class BaseConnection:
         try:
             with ConnectHandler(**self.conn) as net_connect:
                 self.is_reachable = True
-                logger.debug(f'Подключение к устройству {self.name} успешно')
+                logger.debug(f'Подключение к устройству {self.name} - успешно')
 
         except NetmikoTimeoutException as e:
             self.is_reachable = False
-            logger.error(f'TCP connection to {self.name} failed')
+            logger.error(f'TCP connection to {self.name} failed (NetmikoTimeoutException)')
+            logger.debug(e)
+        except NetmikoAuthenticationException as e:
+            self.is_reachable = False
+            logger.error(f'Authentication to {self.name} failed (NetmikoAuthenticationException)')
+            logger.debug(e)
             
 
     @logger.catch
@@ -90,7 +95,13 @@ class Multicontext(BaseConnection):
             if not line.startswith("*"):
                 context = line.split()[0]
                 contexts.append(context)   
-        self.contexts = dict.fromkeys(contexts)
+        if contexts:
+            logger.info(f'Сформирован список контекстов {self.name}: {contexts}')
+
+            self.contexts = dict.fromkeys(contexts)
+        else:
+            logger.error(f'Не удалось сформировать список контекстов для {self.name}')
+
 
 
     @logger.catch
@@ -110,6 +121,8 @@ class Multicontext(BaseConnection):
         result = self.send_command_to_context(command = "show run", context = context)
         if result and result.endswith(": end"):
             self.contexts[context] = result
+            logger.info(f'С контекста {self.name}: {context} успешно считана конфигурация')
+
         else:
             logger.error(f'Unable to get config from {self.name} - {context}')
 
@@ -119,10 +132,20 @@ class Multicontext(BaseConnection):
 
         d = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # dirname = os.path.join(os.path.dirname(__file__), "fw_configs") 
-        filename = self.name + '_' + context + '_' + d + '.txt'
+        filename = context + '_' + d + '.txt'
         # full_path = os.path.join(dirname, filename) 
         main_dir = os.path.dirname(sys.argv[0]) # путь к главной директории 
-        full_path = os.path.join(main_dir, "fw_configs", filename) 
+        backup_dir = os.path.join(main_dir, "fw_configs", self.name) # путь к директории бэкапов МСЭ
+        if not os.path.exists(backup_dir):
+            os.mkdir(backup_dir)
+            logger.info(f'Создана директория {backup_dir} ')
+
+
+        # full_path = os.path.join(main_dir, "fw_configs", self.name,  filename) 
+        full_path = os.path.join(backup_dir,  filename) 
+
         with open(full_path, "w") as f:
             f.write(self.contexts[context])
+            logger.info(f'Конфигурация контекста {self.name}: {context} сохранена в файл {full_path}')
+
 

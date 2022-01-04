@@ -8,21 +8,19 @@ from functions.connections import Multicontext
 from functions.load_config import load_config
 from loguru import logger
 
+main_dir = os.path.dirname(sys.argv[0]) # путь к главной директории 
+logs_dir = os.path.join(main_dir, "logs") 
+
 log_config = {
     "handlers": [
         {"sink": sys.stdout},
-        {"sink": "fw_cfg_sync/logs/fw_cfg_sync_{time}.log", 
+        {"sink": f"{logs_dir}" + "/fw_cfg_sync_{time}.log", 
         "retention": "30 days", 
         'backtrace': True, 
         'diagnose': True},
     ]
 }
 logger.configure(**log_config)
-
-# logger.add("fw_cfg_sync/logs/fw_cfg_sync_{time}.log", retention="30 days", backtrace=True, diagnose=True)
-logger.debug("That's it, beautiful and simple logging!")
-# logging.basicConfig(filename="fw_cfg_sync/logs/netmiko.log", level=logging.DEBUG)
-# logger = logging.getLogger("netmiko")
 
 
 def set_roles(inv):
@@ -49,11 +47,11 @@ dirname = os.path.dirname(__file__)
 p = os.path.join(dirname, "inventory", "multicontext.yaml")
 inv = load_config(p)
 active, standby = set_roles(inv)
-for device in active, standby:
-    device.check_reachability()
-    if not device.is_reachable:
-        pass
-        # mail() #TODO
+# for device in active, standby:
+#     device.check_reachability()
+#     if not device.is_reachable:
+#         pass
+#         # mail() #TODO
 
 active.get_contexts()
 for context in active.contexts:
@@ -74,3 +72,4 @@ for context in active.contexts:
 # keyring.set_password("fw1", "aaa", "aaa")
 # p = keyring.get_password("fw1", "aaa")
 # print(p)
+pass
