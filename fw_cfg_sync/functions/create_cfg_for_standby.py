@@ -1,5 +1,5 @@
 from ciscoconfparse import CiscoConfParse
-from helpers import PARSE_DICT
+from .helpers import PARSE_DICT
 
 
 def config_parser(parse, template):

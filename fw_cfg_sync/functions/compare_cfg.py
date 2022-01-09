@@ -1,5 +1,6 @@
-from .helpers import config_parser_sum
+from .create_cfg_for_standby import config_parser, config_parser_sum
 from .helpers import PARSE_DICT
+from ciscoconfparse import CiscoConfParse
 
 # from variables import *
 
@@ -14,28 +15,61 @@ def print_result_simple(result):
             print(f"{block:<20} FAIL")
             diff = act ^ bak
             if diff:
-                act_only = act.difference(bak)
-                bak_only = bak.difference(act)
+                file1_only = act.difference(bak)
+                file2_only = bak.difference(act)
 
-                if act_only:
+                if file1_only:
                     print("---- Только в active:")
-                    act_out = str()
-                    for i in list(act_only):
-                        act_out += "\n".join(i)
-                        act_out += "\n!\n"
-                    print(act_out)
-                if bak_only:
+                    file1_out = str()
+                    for i in list(file1_only):
+                        file1_out += "\n".join(i)
+                        file1_out += "\n!\n"
+                    print(file1_out)
+                if file2_only:
                     print("---- Только в backup:")
-                    bak_out = str()
-                    for i in list(bak_only):
-                        bak_out += "\n".join(i)
-                        bak_out += "\n!\n"
-                    print(bak_out)
+                    file2_out = str()
+                    for i in list(file2_only):
+                        file2_out += "\n".join(i)
+                        file2_out += "\n!\n"
+                    print(file2_out)
 
 
 def compare_cfg(file1, file2):
     if config_parser_sum(file1) == config_parser_sum(file2):
         return True
+
+
+def show_diff(name1, file1, name2, file2):
+    with open(file1, "r") as f1, open(file2, "r") as f2:
+        parse1 = CiscoConfParse(f1.readlines())
+        parse2 = CiscoConfParse(f2.readlines())
+    for block, template in PARSE_DICT.items():
+        res = []
+        res1 = set(tuple(i.ioscfg) for i in config_parser(parse1, template))
+        res2 = set(tuple(i.ioscfg) for i in config_parser(parse2, template))
+        if res1 == res2:
+            print(f"{block:<20} OK")
+        else:
+            print(f"{block:<20} FAIL")
+            diff = res1 ^ res2
+            if diff:
+                file1_only = res1.difference(res2)
+                file2_only = res2.difference(res1)
+
+                if file1_only:
+                    print(f"---- Только в {name1}:")
+                    file1_out = str()
+                    for i in list(file1_only):
+                        file1_out += "".join(i)
+                        # file1_out += "!"
+                    print(file1_out)
+                if file2_only:
+                    print(f"---- Только в {name2}:")
+                    file2_out = str()
+                    for i in list(file2_only):
+                        file2_out += "".join(i)
+                        # file2_out += "!"
+                    print(file2_out)
 
 
 # def print_result(result):

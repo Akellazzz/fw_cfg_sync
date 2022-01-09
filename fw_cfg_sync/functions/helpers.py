@@ -1,6 +1,3 @@
-from ciscoconfparse import CiscoConfParse
-import yaml
-
 PARSE_DICT = {
     # шаблоны поиска для КЕ
     "names": r"^names$",

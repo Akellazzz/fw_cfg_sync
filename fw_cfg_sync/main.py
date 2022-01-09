@@ -4,6 +4,7 @@ import pickle
 from functions.connections import Multicontext
 from functions.load_config import load_config
 from argparse import ArgumentParser, RawTextHelpFormatter
+from functions.compare_cfg import show_diff
 
 from loguru import logger
 
@@ -19,7 +20,7 @@ def getargs():
     parser.add_argument(
         "-v",
         "--verbose",
-        help="Уровень логирования DEBUG (по умолчанию INFO)",
+        help="Уровень логирования - DEBUG (по умолчанию - INFO)",
         action="store_true",
     )
     parser.add_argument(
@@ -37,22 +38,26 @@ def getargs():
 
 def set_roles(inv):
     # TODO
-    active = Multicontext(
-        name=inv.devices["fw_a"].get("name"),
-        host=inv.devices["fw_a"]["connection"]["host"],
-        username=inv.devices["fw_a"]["connection"]["username"],
-        device_type=inv.devices["fw_a"]["connection"]["device_type"],
-        enable_required=inv.devices["fw_a"]["connection"]["enable_required"],
-    )
-    standby = Multicontext(
-        name=inv.devices["fw_b"].get("name"),
-        host=inv.devices["fw_b"]["connection"]["host"],
-        username=inv.devices["fw_b"]["connection"]["username"],
-        device_type=inv.devices["fw_b"]["connection"]["device_type"],
-        enable_required=inv.devices["fw_b"]["connection"]["enable_required"],
-    )
+    devices = []
+    for device in inv.devices:
+        # active = Multicontext(
+        #     name=inv.devices["fw_a"].get("name"),
+        #     host=inv.devices["fw_a"]["connection"]["host"],
+        #     username=inv.devices["fw_a"]["connection"]["username"],
+        #     device_type=inv.devices["fw_a"]["connection"]["device_type"],
+        #     enable_required=inv.devices["fw_a"]["connection"]["enable_required"],
+        # )
+        devices.append(
+            Multicontext(
+                name=inv.devices[device].get("name"),
+                host=inv.devices[device]["connection"]["host"],
+                username=inv.devices[device]["connection"]["username"],
+                device_type=inv.devices[device]["connection"]["device_type"],
+                enable_required=inv.devices[device]["connection"]["enable_required"],
+            )
+        )
 
-    return active, standby
+    return devices
 
 
 def main():
@@ -81,18 +86,20 @@ def main():
 
     p = os.path.join(main_dir, "inventory", args.filename)
     inv = load_config(p)
-    active, standby = set_roles(inv)
-    for device in active, standby:
-        device.check_reachability()
-        if not device.is_reachable:
+    devices = set_roles(inv)
+    for fw in devices:
+        fw.check_reachability()
+        if not fw.is_reachable:
             pass
             # mail() #TODO
-            sys.exit(f"Не удалось подключиться к {device.name}")
-
-    active.get_contexts()
-    for context in active.contexts:
-        active.get_context_backup(context)
-        active.save_backup_to_file(context)
+            sys.exit(f"Не удалось подключиться к {fw.name}")
+    # active = devices["active"]
+    # standby = devices["standby"]
+    for fw in devices:
+        fw.get_contexts()
+        for context in fw.contexts:
+            fw.get_context_backup(context)
+            fw.save_backup_to_file(context)
 
     # with open("fw_cfg_sync\\tests\\fw_configs\\pickle_dumps\\active_with_backups2.pickle", 'wb') as f:
     #     pickle.dump(active, f)
@@ -107,6 +114,13 @@ def main():
     # keyring.set_password("fw1", "aaa", "aaa")
     # p = keyring.get_password("fw1", "aaa")
     # print(p)
+    show_diff(
+        "active",
+        "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-19-25.txt",
+        "standby",
+        "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-29-30.txt",
+    )
+
     pass
 
 
