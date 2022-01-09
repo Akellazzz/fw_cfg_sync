@@ -57,4 +57,3 @@ CLEAR_COMMANDS = [
 def erase_file(fullpath):
     # erase file
     open(fullpath, "w").close()
-

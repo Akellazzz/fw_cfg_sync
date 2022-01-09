@@ -1,6 +1,7 @@
 from ciscoconfparse import CiscoConfParse
 from helpers import PARSE_DICT
 
+
 def config_parser(parse, template):
 
     if isinstance(template, dict):
@@ -33,8 +34,8 @@ def config_parser_sum(file_):
 
 
 def create_cfg_for_standby(active_fw_cfg_file: str, cfg_for_standby_file: str):
-    ''' Создает конфиг для standby МСЭ.
-    Парсит файл active_fw_cfg_file, выделяет из него необходимые команды и сохраняет в cfg_for_standby_file'''
+    """Создает конфиг для standby МСЭ.
+    Парсит файл active_fw_cfg_file, выделяет из него необходимые команды и сохраняет в cfg_for_standby_file"""
     result = config_parser_sum(active_fw_cfg_file)
     result = [i.replace("\n\n", "\n") for i in result]
     with open(cfg_for_standby_file, "w") as f:
