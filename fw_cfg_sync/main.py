@@ -73,6 +73,7 @@ def main():
                 "retention": "30 days",
                 "backtrace": True,
                 "diagnose": True,
+                "encoding": "utf-8"
             },
         ]
     }
