@@ -1,0 +1,28 @@
+multicontext: True
+prerequisites:
+  check_description: False
+  description: 
+  check_route: False
+  route: 1.1.1.1 255.255.255.0
+devices:
+  # fw_a:
+  #   name: asa1
+  #   role: fw
+  #   connection:
+  #     device_type: cisco_asa
+  #     # host: 192.168.89.111
+  #     host: 192.168.89.115
+  #     username: aaa
+  #     # password: aaa
+  #     enable_required: True
+  fw_b:
+    name: asa2
+    role: fw
+    connection:
+      device_type: cisco_asa
+      # host: 192.168.89.114
+      host: 192.168.89.115
+      username: aaa
+      # password: aaa
+      enable_required: True
+    

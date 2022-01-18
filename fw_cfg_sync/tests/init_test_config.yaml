@@ -1,0 +1,23 @@
+- dev:
+    active:
+      name: asa1
+      ip: 192.168.89.111
+      username: aaa
+      password: aaa
+    standby:
+      name: asa2
+      ip: 192.168.89.114
+      username: aaa
+      password: aaa
+- test:
+    active:
+      name: asa1
+      ip: 192.168.89.111
+      username: aaa
+      password: aaa
+    standby:
+      name: asa2
+      ip: 192.168.89.114
+      username: aaa
+      password: aaa
+    
