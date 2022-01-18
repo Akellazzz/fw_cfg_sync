@@ -2,4 +2,4 @@
 __pycache__
 fw_cfg_sync/fw_configs/*
 *.log
-fw_cfg_sync\fw_configs\*
+fw_configs/*
