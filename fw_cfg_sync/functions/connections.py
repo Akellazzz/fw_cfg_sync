@@ -26,13 +26,14 @@ class BaseConnection:
     """Базовый класс"""
 
     # def __init__(self, **kwargs):
-    def __init__(self, name, host, username, enable_required, device_type):
+    def __init__(self, name, host, username, fast_cli, enable_required, device_type):
         # self.__dict__.update(kwargs)
         self.conn = {}
         self.name = name
         self.conn["host"] = host
         self.conn["device_type"] = device_type
         self.conn["username"] = username
+        self.conn["fast_cli"] = fast_cli
         self.conn["password"] = keyring.get_password(name, username)
         if enable_required:
             self.conn["secret"] = keyring.get_password(name, "secret")

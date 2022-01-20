@@ -17,6 +17,7 @@ class Connection(BaseModel):
     device_type: str
     host: str
     username: str
+    fast_cli: bool
     # password: str
     enable_required: bool
 

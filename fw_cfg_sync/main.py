@@ -55,6 +55,7 @@ def set_roles(inv):
                 host=inv.devices[device]["connection"]["host"],
                 username=inv.devices[device]["connection"]["username"],
                 device_type=inv.devices[device]["connection"]["device_type"],
+                fast_cli=inv.devices[device]["connection"]["fast_cli"],
                 enable_required=inv.devices[device]["connection"]["enable_required"],
             )
         )
