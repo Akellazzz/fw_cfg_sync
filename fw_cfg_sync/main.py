@@ -137,7 +137,7 @@ def main():
     #     "standby",
     #     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-29-30.txt",
     # )
-
+    send_mail('Done', files = [logfile], **mail_config.dict())
     pass
 
 
