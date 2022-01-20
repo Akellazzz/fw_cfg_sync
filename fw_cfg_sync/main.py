@@ -2,9 +2,11 @@ import os
 import sys
 import pickle
 from functions.connections import Multicontext
-from functions.load_config import load_config
+from functions.load_config import load_inventory, load_mail_config
+from functions.send_mail import send_mail
 from argparse import ArgumentParser, RawTextHelpFormatter
 from functions.compare_cfg import show_diff
+from datetime import datetime
 
 from loguru import logger
 
@@ -64,12 +66,13 @@ def main():
     args = getargs()
 
     main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
-    logs_dir = os.path.join(main_dir, "logs")
-
+    logfilename = 'fw_cfg_sync' + "_{:%Y-%m-%d_%H-%M-%S}.log".format(datetime.now())
+    logfile = os.path.join(main_dir, "logs", logfilename)
     log_config = {
         "handlers": [
             {
-                "sink": f"{logs_dir}" + "/fw_cfg_sync_{time}.log",
+                "sink": logfile,
+                # "sink": f"{logs_dir}" + "/fw_cfg_sync_{time}.log",
                 "retention": "30 days",
                 "backtrace": True,
                 "diagnose": True,
@@ -85,15 +88,27 @@ def main():
     # 2022-01-09T19:43:02.912262+0300 INFO No matter added sinks, this message is not displayed
     # logger.remove()
 
-    p = os.path.join(main_dir, "inventory", args.filename)
-    inv = load_config(p)
+    # путь к конфигурации программы
+    app_config_path = os.environ.get('FW-CFG-SYNC_APP_CONFIG')
+    if not app_config_path:
+        msg = "В переменных среды не найдена FW-CFG-SYNC_APP_CONFIG, указывающая путь к конфигурации программы"
+        logger.error(msg)
+        sys.exit(msg)
+        
+    app_config = os.path.join(app_config_path, "app_config.yaml")
+    mail_config = load_mail_config(app_config)
+
+    inv_path = os.path.join(app_config_path, "inventory", args.filename)
+    inv = load_inventory(inv_path)
     devices = set_roles(inv)
     for fw in devices:
         fw.check_reachability()
         if not fw.is_reachable:
-            pass
-            # mail() #TODO
-            sys.exit(f"Не удалось подключиться к {fw.name}")
+            msg = f"Не удалось подключиться к {fw.name}"
+            send_mail(msg, files = [logfile], **mail_config.dict()) 
+            sys.exit(msg)
+
+
     # active = devices["active"]
     # standby = devices["standby"]
     for fw in devices:
@@ -115,12 +130,12 @@ def main():
     # keyring.set_password("fw1", "aaa", "aaa")
     # p = keyring.get_password("fw1", "aaa")
     # print(p)
-    show_diff(
-        "active",
-        "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-19-25.txt",
-        "standby",
-        "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-29-30.txt",
-    )
+    # show_diff(
+    #     "active",
+    #     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-19-25.txt",
+    #     "standby",
+    #     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-29-30.txt",
+    # )
 
     pass
 

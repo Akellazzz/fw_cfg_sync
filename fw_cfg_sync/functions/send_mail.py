@@ -3,13 +3,15 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from os.path import basename
+from loguru import logger
 
 
 def send_mail(text: str,
-              subject: str = "Отчет о синхронизации конфигураций МСЭ",
-              send_from: str = "eekosyanenko@vtb.ru",
-              send_to: list[str] = ["eekosyanenko@vtb.ru"],
-              server: str = "smtp.region.vtb.ru",
+              subject: str,
+              send_from: str,
+              send_to: list[str],
+              server: str,
+              enabled: bool,
               files: list[str] = None) -> None :
     """Compose and send email with provided info and attachments.
 
@@ -19,9 +21,15 @@ def send_mail(text: str,
         send_from: from name
         send_to: to name(s)       
         server: mail server host name
+        enabled: True/False
         files: list of file paths to be attached to email
     """
-    
+
+    if not enabled:
+        logger.debug(f"Mail is disabled by app config but send_mail is called with text: {text}")
+
+        return
+
     assert isinstance(send_to, list)
 
     message = MIMEMultipart()
@@ -53,9 +61,14 @@ def send_mail(text: str,
         message.attach(part)
 
     msg_full = message.as_string()
+    try:
+        server = smtplib.SMTP(server)
 
-    server = smtplib.SMTP(server)
-    server.sendmail(send_from, send_to, msg_full)
-    server.quit()
+        server.sendmail(send_from, send_to, msg_full)
+        server.quit()
+    except Exception as e:
+        logger.error('Unable to send message')
+        logger.error(f"Exception: {e}")
+        return
     
 # send_mail("test", files = ["del.txt"])

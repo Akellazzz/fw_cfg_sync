@@ -1,0 +1,7 @@
+mail_reports:
+  enabled: True
+  subject:  Отчет о синхронизации конфигураций МСЭ
+  send_from: example@example.ru
+  send_to: 
+    - example@example.ru
+  server: smtp.example.ru

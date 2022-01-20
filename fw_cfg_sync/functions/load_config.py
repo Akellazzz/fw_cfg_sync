@@ -5,6 +5,14 @@ import yaml
 from loguru import logger
 
 
+class MailConfig(BaseModel):
+    enabled: bool
+    subject: str
+    send_from: str
+    send_to: list[str]
+    server: str
+
+
 class Connection(BaseModel):
     device_type: str
     host: str
@@ -48,15 +56,26 @@ class Config(BaseModel):
     devices: dict
 
 
-def load_config(file):
-    print(file)
-    with open(file, "r") as stream:
+def load_inventory(file):
+    # print(file)
+    with open(file, "r", encoding='utf-8') as stream:
         try:
-            init_config = yaml.safe_load(stream)
+            cfg = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
-    # print(init_config["prerequisites"])
-    # print(init_config["devices"])
+    # print(cfg["prerequisites"])
+    # print(cfg["devices"])
     return Config(
-        prerequisites=init_config["prerequisites"], devices=init_config["devices"]
+        prerequisites=cfg["prerequisites"], devices=cfg["devices"]
     )
+
+
+def load_mail_config(file):
+    # print(file)
+    with open(file, "r", encoding='utf-8') as stream:
+        try:
+            cfg = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+    return MailConfig(**cfg.get('mail_reports'))
+    
