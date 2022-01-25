@@ -140,10 +140,14 @@ class Multicontext(BaseConnection):
         # dirname = os.path.join(os.path.dirname(__file__), "fw_configs")
         filename = context + "_" + d + ".txt"
         # full_path = os.path.join(dirname, filename)
-        main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
-        backup_dir = os.path.join(
-            main_dir, "fw_configs", self.name
-        )  # путь к директории бэкапов МСЭ
+        # main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
+        
+        # путь к общей директории для сохранения бэкапов МСЭ
+        parent_backup_dir = os.environ.get('FW-CFG-SYNC_BACKUPS')
+
+        # путь к  директории для сохранения бэкапов контекстов
+        backup_dir = os.path.join(parent_backup_dir, self.name)  
+
         if not os.path.exists(backup_dir):
             os.mkdir(backup_dir)
             logger.info(f"Создана директория {backup_dir} ")

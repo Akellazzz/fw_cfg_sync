@@ -64,11 +64,21 @@ def set_roles(inv):
 
 
 def main():
+
+    # путь к конфигурации программы
+    app_config_path = os.environ.get('FW-CFG-SYNC_APP_CONFIG')
+
+    # директория для сохранения логов
+    app_log_dir = os.environ.get('FW-CFG-SYNC_LOGDIR')
+
+    # # путь к основной директории
+    # main_dir = os.path.dirname(sys.argv[0])  
+
+        
     args = getargs()
 
-    main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
     logfilename = 'fw_cfg_sync' + "_{:%Y-%m-%d_%H-%M-%S}.log".format(datetime.now())
-    logfile = os.path.join(main_dir, "logs", logfilename)
+    logfile = os.path.join(app_log_dir, logfilename)
     log_config = {
         "handlers": [
             {
@@ -89,8 +99,6 @@ def main():
     # 2022-01-09T19:43:02.912262+0300 INFO No matter added sinks, this message is not displayed
     # logger.remove()
 
-    # путь к конфигурации программы
-    app_config_path = os.environ.get('FW-CFG-SYNC_APP_CONFIG')
     if not app_config_path:
         msg = "В переменных среды не найдена FW-CFG-SYNC_APP_CONFIG, указывающая путь к конфигурации программы"
         logger.error(msg)

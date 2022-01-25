@@ -1,4 +1,6 @@
 .venv
 app_config
+fw_configs
+logs
 __pycache__
 *.log
