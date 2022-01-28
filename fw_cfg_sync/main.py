@@ -173,7 +173,7 @@ def main():
         )
         if uniq_in_standby:
             logger.info(f"На резервном МСЭ {standby_fw.name}-{context} найдены команды, которых нет на активном МСЭ: \n{uniq_in_standby}" )
-        elif uniq_in_active:
+        if uniq_in_active:
             logger.info(f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ: \n{uniq_in_active}" )
             backup_dir = os.environ.get('FW-CFG-SYNC_BACKUPS')
             # uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
@@ -195,7 +195,7 @@ def main():
                 )
             attached_files.append(commands_for_active)
             attached_files.append(commands_for_standby)
-        elif (not uniq_in_standby) and (not uniq_in_active):
+        if (not uniq_in_standby) and (not uniq_in_active):
             logger.info(
                 f"Конфигурации контекста {context} МСЭ {active_fw.name}/{standby_fw.name} равны"
             )
