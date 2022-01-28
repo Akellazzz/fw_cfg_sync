@@ -1,218 +1,671 @@
-sh run
 : Saved
-
+: 
+: Hardware:   ASA5520
 :
-: Serial Number: 9AUS1R2UH6D
-: Hardware:   ASAv, 2048 MB RAM, CPU Xeon 5600 series 2419 MHz
-:
-ASA Version 9.14(1)6
+ASA Version 9.1(5)16 <context>
 !
-terminal width 511
-hostname asav1
-enable password ***** pbkdf2
-service-module 0 keepalive-timeout 4
-service-module 0 keepalive-counter 6
+hostname test1
+enable password 8Ry2YjIyt7RRXU24 encrypted
 names
-no mac-address auto
-
 !
-interface GigabitEthernet0/0
- nameif mgmt
- security-level 100
- ip address 192.168.88.112 255.255.255.0
-!
-interface GigabitEthernet0/1
- shutdown
- no nameif
- no security-level
+interface Ethernet1
+ nameif test1
+ security-level 0
  no ip address
 !
-interface GigabitEthernet0/2
- shutdown
- no nameif
- no security-level
- no ip address
 !
-interface GigabitEthernet0/3
- shutdown
- no nameif
- no security-level
- no ip address
+time-range tr0
+ absolute end 00:00 16 December 2025
 !
-interface GigabitEthernet0/4
- shutdown
- no nameif
- no security-level
- no ip address
+time-range tr1
+ absolute end 00:00 16 December 2025
 !
-interface GigabitEthernet0/5
- shutdown
- no nameif
- no security-level
- no ip address
+time-range tr10
+ absolute end 00:00 16 December 2025
 !
-interface GigabitEthernet0/6
- shutdown
- no nameif
- no security-level
- no ip address
+time-range tr11
+ absolute end 00:00 16 December 2025
 !
-interface Management0/0
- no management-only
- shutdown
- no nameif
- no security-level
- no ip address
+time-range tr12
+ absolute end 00:00 16 December 2025
 !
-ftp mode passive
-pager lines 23
-mtu mgmt 1500
-no failover
-no failover wait-disable
+time-range tr13
+ absolute end 00:00 16 December 2025
+!
+time-range tr14
+ absolute end 00:00 16 December 2025
+!
+time-range tr15
+ absolute end 00:00 16 December 2025
+!
+time-range tr16
+ absolute end 00:00 16 December 2025
+!
+time-range tr17
+ absolute end 00:00 16 December 2025
+!
+time-range tr18
+ absolute end 00:00 16 December 2025
+!
+time-range tr19
+ absolute end 00:00 16 December 2025
+!
+time-range tr2
+ absolute end 00:00 16 December 2025
+!
+time-range tr20
+ absolute end 00:00 16 December 2025
+!
+time-range tr21
+ absolute end 00:00 16 December 2025
+!
+time-range tr22
+ absolute end 00:00 16 December 2025
+!
+time-range tr23
+ absolute end 00:00 16 December 2025
+!
+time-range tr24
+ absolute end 00:00 16 December 2025
+!
+time-range tr25
+ absolute end 00:00 16 December 2025
+!
+time-range tr26
+ absolute end 00:00 16 December 2025
+!
+time-range tr27
+ absolute end 00:00 16 December 2025
+!
+time-range tr28
+ absolute end 00:00 16 December 2025
+!
+time-range tr29
+ absolute end 00:00 16 December 2025
+!
+time-range tr3
+ absolute end 00:00 16 December 2025
+!
+time-range tr30
+ absolute end 00:00 16 December 2025
+!
+time-range tr31
+ absolute end 00:00 16 December 2025
+!
+time-range tr32
+ absolute end 00:00 16 December 2025
+!
+time-range tr33
+ absolute end 00:00 16 December 2025
+!
+time-range tr34
+ absolute end 00:00 16 December 2025
+!
+time-range tr35
+ absolute end 00:00 16 December 2025
+!
+time-range tr36
+ absolute end 00:00 16 December 2025
+!
+time-range tr37
+ absolute end 00:00 16 December 2025
+!
+time-range tr38
+ absolute end 00:00 16 December 2025
+!
+time-range tr39
+ absolute end 00:00 16 December 2025
+!
+time-range tr4
+ absolute end 00:00 16 December 2025
+!
+time-range tr40
+ absolute end 00:00 16 December 2025
+!
+time-range tr41
+ absolute end 00:00 16 December 2025
+!
+time-range tr42
+ absolute end 00:00 16 December 2025
+!
+time-range tr43
+ absolute end 00:00 16 December 2025
+!
+time-range tr44
+ absolute end 00:00 16 December 2025
+!
+time-range tr45
+ absolute end 00:00 16 December 2025
+!
+time-range tr46
+ absolute end 00:00 16 December 2025
+!
+time-range tr47
+ absolute end 00:00 16 December 2025
+!
+time-range tr48
+ absolute end 00:00 16 December 2025
+!
+time-range tr49
+ absolute end 00:00 16 December 2025
+!
+time-range tr5
+ absolute end 00:00 16 December 2025
+!
+time-range tr6
+ absolute end 00:00 16 December 2025
+!
+time-range tr7
+ absolute end 00:00 16 December 2025
+!
+time-range tr8
+ absolute end 00:00 16 December 2025
+!
+time-range tr9
+ absolute end 00:00 16 December 2025
+!
+object network on0
+ host 1.1.1.1
+object network on1
+ host 1.1.1.1
+object network on2
+ host 1.1.1.1
+object network on3
+ host 1.1.1.1
+object network on4
+ host 1.1.1.1
+object network on5
+ host 1.1.1.1
+object network on6
+ host 1.1.1.1
+object network on7
+ host 1.1.1.1
+object network on8
+ host 1.1.1.1
+object network on9
+ host 1.1.1.1
+object network on10
+ host 1.1.1.1
+object network on11
+ host 1.1.1.1
+object network on12
+ host 1.1.1.1
+object network on13
+ host 1.1.1.1
+object network on14
+ host 1.1.1.1
+object network on15
+ host 1.1.1.1
+object network on16
+ host 1.1.1.1
+object network on17
+ host 1.1.1.1
+object network on18
+ host 1.1.1.1
+object network on19
+ host 1.1.1.1
+object network on20
+ host 1.1.1.1
+object network on21
+ host 1.1.1.1
+object network on22
+ host 1.1.1.1
+object network on23
+ host 1.1.1.1
+object network on24
+ host 1.1.1.1
+object network on25
+ host 1.1.1.1
+object network on26
+ host 1.1.1.1
+object network on27
+ host 1.1.1.1
+object network on28
+ host 1.1.1.1
+object network on29
+ host 1.1.1.1
+object network on30
+ host 1.1.1.1
+object network on31
+ host 1.1.1.1
+object network on32
+ host 1.1.1.1
+object network on33
+ host 1.1.1.1
+object network on34
+ host 1.1.1.1
+object network on35
+ host 1.1.1.1
+object network on36
+ host 1.1.1.1
+object network on37
+ host 1.1.1.1
+object network on38
+ host 1.1.1.1
+object network on39
+ host 1.1.1.1
+object network on40
+ host 1.1.1.1
+object network on41
+ host 1.1.1.1
+object network on42
+ host 1.1.1.1
+object network on43
+ host 1.1.1.1
+object network on44
+ host 1.1.1.1
+object network on45
+ host 1.1.1.1
+object network on46
+ host 1.1.1.1
+object network on47
+ host 1.1.1.1
+object network on48
+ host 1.1.1.1
+object network on49
+ host 1.1.1.1
+object-group network og0
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og1
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og2
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og3
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og4
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og5
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og6
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og7
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og8
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og9
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og10
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og11
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og12
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og13
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og14
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og15
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og16
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og17
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og18
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og19
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og20
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og21
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og22
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og23
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og24
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og25
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og26
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og27
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og28
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og29
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og30
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og31
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og32
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og33
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og34
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og35
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og36
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og37
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og38
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og39
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og40
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og41
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og42
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og43
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og44
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og45
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og46
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og47
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og48
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group network og49
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0
+object-group protocol obj_prot0
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot1
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot2
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot3
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot4
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot5
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot6
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot7
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot8
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot9
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot10
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot11
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot12
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot13
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot14
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot15
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot16
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot17
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot18
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot19
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot20
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot21
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot22
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot23
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot24
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot25
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot26
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot27
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot28
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot29
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot30
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot31
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot32
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot33
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot34
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot35
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot36
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot37
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot38
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot39
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot40
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot41
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot42
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot43
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot44
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot45
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot46
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot47
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot48
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot49
+ description test_og_prot
+ protocol-object icmp
+access-list test extended permit ip any any time-range tr49 
+access-list test extended permit icmp any any time-range tr49 
+access-list acl_og0 extended deny ip object-group og0 host 8.8.8.8 
+access-list acl_og1 extended deny ip object-group og1 host 8.8.8.8 
+access-list acl_og2 extended deny ip object-group og2 host 8.8.8.8 
+access-list acl_og3 extended deny ip object-group og3 host 8.8.8.8 
+access-list acl_og4 extended deny ip object-group og4 host 8.8.8.8 
+access-list acl_og5 extended deny ip object-group og5 host 8.8.8.8 
+access-list acl_og6 extended deny ip object-group og6 host 8.8.8.8 
+access-list acl_og7 extended deny ip object-group og7 host 8.8.8.8 
+access-list acl_og8 extended deny ip object-group og8 host 8.8.8.8 
+access-list acl_og9 extended deny ip object-group og9 host 8.8.8.8 
+access-list acl_og10 extended deny ip object-group og10 host 8.8.8.8 
+access-list acl_og11 extended deny ip object-group og11 host 8.8.8.8 
+access-list acl_og12 extended deny ip object-group og12 host 8.8.8.8 
+access-list acl_og13 extended deny ip object-group og13 host 8.8.8.8 
+access-list acl_og14 extended deny ip object-group og14 host 8.8.8.8 
+access-list acl_og15 extended deny ip object-group og15 host 8.8.8.8 
+access-list acl_og16 extended deny ip object-group og16 host 8.8.8.8 
+access-list acl_og17 extended deny ip object-group og17 host 8.8.8.8 
+access-list acl_og18 extended deny ip object-group og18 host 8.8.8.8 
+access-list acl_og19 extended deny ip object-group og19 host 8.8.8.8 
+access-list acl_og20 extended deny ip object-group og20 host 8.8.8.8 
+access-list acl_og21 extended deny ip object-group og21 host 8.8.8.8 
+access-list acl_og22 extended deny ip object-group og22 host 8.8.8.8 
+access-list acl_og23 extended deny ip object-group og23 host 8.8.8.8 
+access-list acl_og24 extended deny ip object-group og24 host 8.8.8.8 
+access-list acl_og25 extended deny ip object-group og25 host 8.8.8.8 
+access-list acl_og26 extended deny ip object-group og26 host 8.8.8.8 
+access-list acl_og27 extended deny ip object-group og27 host 8.8.8.8 
+access-list acl_og28 extended deny ip object-group og28 host 8.8.8.8 
+access-list acl_og29 extended deny ip object-group og29 host 8.8.8.8 
+access-list acl_og30 extended deny ip object-group og30 host 8.8.8.8 
+access-list acl_og31 extended deny ip object-group og31 host 8.8.8.8 
+access-list acl_og32 extended deny ip object-group og32 host 8.8.8.8 
+access-list acl_og33 extended deny ip object-group og33 host 8.8.8.8 
+access-list acl_og34 extended deny ip object-group og34 host 8.8.8.8 
+access-list acl_og35 extended deny ip object-group og35 host 8.8.8.8 
+access-list acl_og36 extended deny ip object-group og36 host 8.8.8.8 
+access-list acl_og37 extended deny ip object-group og37 host 8.8.8.8 
+access-list acl_og38 extended deny ip object-group og38 host 8.8.8.8 
+access-list acl_og39 extended deny ip object-group og39 host 8.8.8.8 
+access-list acl_og40 extended deny ip object-group og40 host 8.8.8.8 
+access-list acl_og41 extended deny ip object-group og41 host 8.8.8.8 
+access-list acl_og42 extended deny ip object-group og42 host 8.8.8.8 
+access-list acl_og43 extended deny ip object-group og43 host 8.8.8.8 
+access-list acl_og44 extended deny ip object-group og44 host 8.8.8.8 
+access-list acl_og45 extended deny ip object-group og45 host 8.8.8.8 
+access-list acl_og46 extended deny ip object-group og46 host 8.8.8.8 
+access-list acl_og47 extended deny ip object-group og47 host 8.8.8.8 
+access-list acl_og48 extended deny ip object-group og48 host 8.8.8.8 
+access-list acl_og49 extended deny ip object-group og49 host 8.8.8.8 
+pager lines 24
+mtu test1 1500
 icmp unreachable rate-limit 1 burst-size 1
 no asdm history enable
 arp timeout 14400
-no arp permit-nonconnected
-arp rate-limit 8192
-route mgmt 0.0.0.0 0.0.0.0 192.168.88.1 1
+access-group test in interface test1
 timeout xlate 3:00:00
 timeout pat-xlate 0:00:30
-timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 sctp 0:02:00 icmp 0:00:02
+timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 icmp 0:00:02
 timeout sunrpc 0:10:00 h323 0:05:00 h225 1:00:00 mgcp 0:05:00 mgcp-pat 0:05:00
 timeout sip 0:30:00 sip_media 0:02:00 sip-invite 0:03:00 sip-disconnect 0:02:00
 timeout sip-provisional-media 0:02:00 uauth 0:05:00 absolute
 timeout tcp-proxy-reassembly 0:01:00
 timeout floating-conn 0:00:00
-timeout conn-holddown 0:00:15
-timeout igp stale-route 0:01:10
 user-identity default-domain LOCAL
-aaa authentication ssh console LOCAL
-aaa authentication login-history
 no snmp-server location
 no snmp-server contact
 crypto ipsec security-association pmtu-aging infinite
-crypto ca trustpoint _SmartCallHome_ServerCA
- no validation-usage
- crl configure
-crypto ca trustpool policy
- auto-import
-crypto ca certificate chain _SmartCallHome_ServerCA
- certificate ca 0509
-    308205b7 3082039f a0030201 02020205 09300d06 092a8648 86f70d01 01050500
-    3045310b 30090603 55040613 02424d31 19301706 0355040a 13105175 6f566164
-    6973204c 696d6974 6564311b 30190603 55040313 1251756f 56616469 7320526f
-    6f742043 41203230 1e170d30 36313132 34313832 3730305a 170d3331 31313234
-    31383233 33335a30 45310b30 09060355 04061302 424d3119 30170603 55040a13
-    1051756f 56616469 73204c69 6d697465 64311b30 19060355 04031312 51756f56
-    61646973 20526f6f 74204341 20323082 0222300d 06092a86 4886f70d 01010105
-    00038202 0f003082 020a0282 0201009a 18ca4b94 0d002daf 03298af0 0f81c8ae
-    4c19851d 089fab29 4485f32f 81ad321e 9046bfa3 86261a1e fe7e1c18 3a5c9c60
-    172a3a74 8333307d 615411cb edabe0e6 d2a27ef5 6b6f18b7 0a0b2dfd e93eef0a
-    c6b310e9 dcc24617 f85dfda4 daff9e49 5a9ce633 e62496f7 3fba5b2b 1c7a35c2
-    d667feab 66508b6d 28602bef d760c3c7 93bc8d36 91f37ff8 db1113c4 9c7776c1
-    aeb7026a 817aa945 83e205e6 b956c194 378f4871 6322ec17 6507958a 4bdf8fc6
-    5a0ae5b0 e35f5e6b 11ab0cf9 85eb44e9 f80473f2 e9fe5c98 8cf573af 6bb47ecd
-    d45c022b 4c39e1b2 95952d42 87d7d5b3 9043b76c 13f1dedd f6c4f889 3fd175f5
-    92c391d5 8a88d090 ecdc6dde 89c26571 968b0d03 fd9cbf5b 16ac92db eafe797c
-    adebaff7 16cbdbcd 252be51f fb9a9fe2 51cc3a53 0c48e60e bdc9b476 0652e611
-    13857263 0304e004 362b2019 02e874a7 1fb6c956 66f07525 dc67c10e 616088b3
-    3ed1a8fc a3da1db0 d1b12354 df44766d ed41d8c1 b222b653 1cdf351d dca1772a
-    31e42df5 e5e5dbc8 e0ffe580 d70b63a0 ff33a10f ba2c1515 ea97b3d2 a2b5bef2
-    8c961e1a 8f1d6ca4 6137b986 7333d797 969e237d 82a44c81 e2a1d1ba 675f9507
-    a32711ee 16107bbc 454a4cb2 04d2abef d5fd0c51 ce506a08 31f991da 0c8f645c
-    03c33a8b 203f6e8d 673d3ad6 fe7d5b88 c95efbcc 61dc8b33 77d34432 35096204
-    921610d8 9e2747fb 3b21e3f8 eb1d5b02 03010001 a381b030 81ad300f 0603551d
-    130101ff 04053003 0101ff30 0b060355 1d0f0404 03020106 301d0603 551d0e04
-    1604141a 8462bc48 4c332504 d4eed0f6 03c41946 d1946b30 6e060355 1d230467
-    30658014 1a8462bc 484c3325 04d4eed0 f603c419 46d1946b a149a447 3045310b
-    30090603 55040613 02424d31 19301706 0355040a 13105175 6f566164 6973204c
-    696d6974 6564311b 30190603 55040313 1251756f 56616469 7320526f 6f742043
-    41203282 02050930 0d06092a 864886f7 0d010105 05000382 0201003e 0a164d9f
-    065ba8ae 715d2f05 2f67e613 4583c436 f6f3c026 0c0db547 645df8b4 72c946a5
-    03182755 89787d76 ea963480 1720dce7 83f88dfc 07b8da5f 4d2e67b2 84fdd944
-    fc775081 e67cb4c9 0d0b7253 f8760707 4147960c fbe08226 93558cfe 221f6065
-    7c5fe726 b3f73290 9850d437 7155f692 2178f795 79faf82d 26876656 3077a637
-    78335210 58ae3f61 8ef26ab1 ef187e4a 5963ca8d a256d5a7 2fbc561f cf39c1e2
-    fb0aa815 2c7d4d7a 63c66c97 443cd26f c34a170a f890d257 a21951a5 2d9741da
-    074fa950 da908d94 46e13ef0 94fd1000 38f53be8 40e1b46e 561a20cc 6f588ded
-    2e458fd6 e9933fe7 b12cdf3a d6228cdc 84bb226f d0f8e4c6 39e90488 3cc3baeb
-    557a6d80 9924f56c 01fbf897 b0945beb fdd26ff1 77680d35 6423acb8 55a103d1
-    4d4219dc f8755956 a3f9a849 79f8af0e b911a07c b76aed34 d0b62662 381a870c
-    f8e8fd2e d3907f07 912a1dd6 7e5c8583 99b03808 3fe95ef9 3507e4c9 626e577f
-    a75095f7 bac89be6 8ea201c5 d666bf79 61f33c1c e1b9825c 5da0c3e9 d848bd19
-    a2111419 6eb2861b 683e4837 1a88b75d 965e9cc7 ef276208 e291195c d2f121dd
-    ba174282 97718153 31a99ff6 7d62bf72 e1a3931d cc8a265a 0938d0ce d70d8016
-    b478a53a 874c8d8a a5d54697 f22c10b9 bc5422c0 01506943 9ef4b2ef 6df8ecda
-    f1e3b1ef df918f54 2a0b25c1 2619c452 100565d5 8210eac2 31cd2e
-  quit
 telnet timeout 5
 ssh stricthostkeycheck
 ssh timeout 5
-ssh version 2
-ssh key-exchange group dh-group14-sha256
-ssh 0.0.0.0 0.0.0.0 mgmt
-console timeout 0
-console serial
-threat-detection basic-threat
-threat-detection statistics access-list
+ssh key-exchange group dh-group1-sha1
 no threat-detection statistics tcp-intercept
-dynamic-access-policy-record DfltAccessPolicy
-username aaa password ***** pbkdf2
 !
 class-map inspection_default
  match default-inspection-traffic
 !
 !
-policy-map type inspect dns preset_dns_map
- parameters
-  message-length maximum client auto
-  message-length maximum 512
-  no tcp-inspection
-policy-map global_policy
- class inspection_default
-  inspect ip-options
-  inspect netbios
-  inspect rtsp
-  inspect sunrpc
-  inspect tftp
-  inspect xdmcp
-  inspect dns preset_dns_map
-  inspect ftp
-  inspect h323 h225
-  inspect h323 ras
-  inspect rsh
-  inspect esmtp
-  inspect sqlnet
-  inspect sip
-  inspect skinny
-  inspect snmp
-policy-map type inspect dns migrated_dns_map_2
- parameters
-  message-length maximum client auto
-  message-length maximum 512
-  no tcp-inspection
 policy-map type inspect dns migrated_dns_map_1
  parameters
   message-length maximum client auto
   message-length maximum 512
-  no tcp-inspection
+policy-map global_policy
+ class inspection_default
+  inspect dns migrated_dns_map_1 
+  inspect ftp 
+  inspect h323 h225 
+  inspect h323 ras 
+  inspect ip-options 
+  inspect netbios 
+  inspect rsh 
+  inspect rtsp 
+  inspect skinny  
+  inspect esmtp 
+  inspect sqlnet 
+  inspect sunrpc 
+  inspect tftp 
+  inspect sip  
+  inspect xdmcp 
 !
 service-policy global_policy global
-prompt hostname context
-no call-home reporting anonymous
-call-home
- profile License
-  destination address http https://tools.cisco.com/its/service/oddce/services/DDCEService
-  destination transport-method http
- profile CiscoTAC-1
-  no active
-  destination address http https://tools.cisco.com/its/service/oddce/services/DDCEService
-  destination address email callhome@cisco.com
-  destination transport-method http
-  subscribe-to-alert-group diagnostic
-  subscribe-to-alert-group environment
-  subscribe-to-alert-group inventory periodic monthly
-  subscribe-to-alert-group configuration periodic monthly
-  subscribe-to-alert-group telemetry periodic daily
-Cryptochecksum:ee8fb22630624fd6a4c6af77d0b81def
+Cryptochecksum:9efbf9575f78570b827bea6f8e3ef192
 : end

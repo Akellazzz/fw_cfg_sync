@@ -125,7 +125,8 @@ class Multicontext(BaseConnection):
 
         result = self.send_command_to_context(command="show run", context=context)
         if result and result.endswith(": end"):
-            self.contexts[context] = result
+            
+            self.contexts[context] = {'config': result}
             logger.info(
                 f"С контекста {self.name}: {context} успешно считана конфигурация"
             )
@@ -133,12 +134,12 @@ class Multicontext(BaseConnection):
         else:
             logger.error(f"Unable to get config from {self.name} - {context}")
 
-    def save_backup_to_file(self, context):
+    def save_backup_to_file(self, context, datetime_now):
         """Сохраняет бэкап конфигурации в файл {имя_МСЭ}_{контекст}_{время}.txt"""
 
-        d = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        # d = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # dirname = os.path.join(os.path.dirname(__file__), "fw_configs")
-        filename = context + "_" + d + ".txt"
+        filename = context + "_" + datetime_now + ".txt"
         # full_path = os.path.join(dirname, filename)
         # main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
         
@@ -154,9 +155,10 @@ class Multicontext(BaseConnection):
 
         # full_path = os.path.join(main_dir, "fw_configs", self.name,  filename)
         full_path = os.path.join(backup_dir, filename)
-
+        self.contexts[context]['backup_path'] = full_path
         with open(full_path, "w") as f:
-            f.write(self.contexts[context])
+            f.write(self.contexts[context]['config'])
             logger.info(
                 f"Конфигурация контекста {self.name}: {context} сохранена в файл {full_path}"
             )
+

@@ -1,5 +1,5 @@
-from .create_cfg_for_standby import config_parser, config_parser_sum
-from .helpers import PARSE_DICT
+from ..create_cfg_for_standby import config_parser, config_parser_sum
+from ..helpers import PARSE_DICT
 from ciscoconfparse import CiscoConfParse
 
 # from variables import *
@@ -39,7 +39,7 @@ def compare_cfg(file1, file2):
         return True
 
 
-def show_diff(name1, file1, name2, file2):
+def show_diff(name1, file1, name2, file2, datetime_now):
     with open(file1, "r") as f1, open(file2, "r") as f2:
         parse1 = CiscoConfParse(f1.readlines())
         parse2 = CiscoConfParse(f2.readlines())

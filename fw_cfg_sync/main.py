@@ -1,13 +1,13 @@
 import os
+import yaml
 import sys
-import pickle
 from functions.connections import Multicontext
 from functions.load_config import load_inventory, load_mail_config
 from functions.send_mail import send_mail
 from argparse import ArgumentParser, RawTextHelpFormatter
-from functions.compare_cfg import show_diff
+from functions.find_delta import find_delta
 from datetime import datetime
-
+from copy import deepcopy
 from loguru import logger
 
 
@@ -38,7 +38,9 @@ def getargs():
     return parser.parse_args()
 
 
-def set_roles(inv):
+def get_inventory(inv):
+    '''
+    '''
     # TODO
     devices = []
     for device in inv.devices:
@@ -63,7 +65,11 @@ def set_roles(inv):
     return devices
 
 
+
 def main():
+
+    # среда dev/prod
+    environment = os.environ.get('FW-CFG-SYNC_ENVIRONMENT')
 
     # путь к конфигурации программы
     app_config_path = os.environ.get('FW-CFG-SYNC_APP_CONFIG')
@@ -76,8 +82,9 @@ def main():
 
         
     args = getargs()
-
-    logfilename = 'fw_cfg_sync' + "_{:%Y-%m-%d_%H-%M-%S}.log".format(datetime.now())
+    datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    
+    logfilename = f'fw_cfg_sync_{datetime_now}.log'
     logfile = os.path.join(app_log_dir, logfilename)
     log_config = {
         "handlers": [
@@ -106,10 +113,13 @@ def main():
         
     app_config = os.path.join(app_config_path, "app_config.yaml")
     mail_config = load_mail_config(app_config)
+    attached_files = [logfile]
 
     inv_path = os.path.join(app_config_path, "inventory", args.filename)
     inv = load_inventory(inv_path)
-    devices = set_roles(inv)
+
+    devices = get_inventory(inv)
+    
     for fw in devices:
         fw.check_reachability()
         if not fw.is_reachable:
@@ -118,34 +128,76 @@ def main():
             sys.exit(msg)
 
 
-    # active = devices["active"]
-    # standby = devices["standby"]
     for fw in devices:
         fw.get_contexts()
+    #     for context in fw.contexts:
+    #         fw.is_active = check_role(context)  # if it's active site sets fw.is_active = True  else False
+        
+
+    for fw in devices:
         for context in fw.contexts:
             fw.get_context_backup(context)
-            fw.save_backup_to_file(context)
+            fw.save_backup_to_file(context, datetime_now)
 
-    # with open("fw_cfg_sync\\tests\\fw_configs\\pickle_dumps\\active_with_backups2.pickle", 'wb') as f:
-    #     pickle.dump(active, f)
-    # with open("fw_cfg_sync\\tests\\fw_configs\\pickle_dumps\\standby_unreacheble.pickle", 'wb') as f:
-    #     pickle.dump(standby, f)
+    if environment == 'dev':
+        active_fw = deepcopy(devices[0])
+        standby_fw = deepcopy(devices[0])
+        for context in standby_fw.contexts:
+            standby_fw.contexts[context]["backup_path"] = "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-25_18-51-21.txt"
 
-    # with open("fw_cfg_sync\\tests\\fw_configs\\pickle_dumps\\active_with_backups2.pickle", 'rb') as f:
-    #     active = pickle.load(f)
-    # with open("fw_cfg_sync\\tests\\fw_configs\\pickle_dumps\\standby_unreacheble.pickle", 'rb') as f:
-    #     standby = pickle.load(f)
 
-    # keyring.set_password("fw1", "aaa", "aaa")
-    # p = keyring.get_password("fw1", "aaa")
-    # print(p)
-    # show_diff(
-    #     "active",
-    #     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-19-25.txt",
-    #     "standby",
-    #     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_cfg_sync\\fw_configs\\asa1\\test1_2022-01-04_22-29-30.txt",
-    # )
-    send_mail('Done', files = [logfile], **mail_config.dict())
+    elif environment == 'prod':
+        with open(app_config, "r", encoding='utf-8') as stream:
+            try:
+                cfg = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+        active_name = cfg["prod_env_temp_vars"]["active_fw"]
+        standby_name = cfg["prod_env_temp_vars"]["standby_fw"]
+        for fw in devices:
+            if fw.name == active_name:
+                active_fw = fw
+            elif fw.name == standby_name:
+                standby_fw = fw
+
+
+    assert active_fw.contexts.keys() == standby_fw.contexts.keys()
+
+    for context in active_fw.contexts:
+        commands_for_standby = ""
+        uniq_in_active, uniq_in_standby = find_delta(
+            "active",
+            active_fw.contexts[context]["backup_path"],
+            "standby",
+            standby_fw.contexts[context]["backup_path"],
+        )
+        if uniq_in_standby:
+            msg = f"На резервном МСЭ {standby_fw.name}-{context} найдены команды, которых нет на активном МСЭ \n{uniq_in_standby}" 
+            logger.error(msg)
+            logger.error(f"Выход")
+            send_mail(msg, files = [logfile], **mail_config.dict()) 
+            sys.exit()
+            # TODO
+        elif uniq_in_active:
+
+            backup_dir = os.environ.get('FW-CFG-SYNC_BACKUPS')
+            uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
+            commands_for_standby = os.path.join(backup_dir, standby_fw.name, uniq_in_active_filename)
+
+            with open(commands_for_standby, "w") as f:
+                f.write(uniq_in_active)
+                logger.info(
+                    f"Дельта для {standby_fw.name}-{context} сохранена в файл {commands_for_standby}"
+                )
+            attached_files.append(commands_for_standby)
+        elif (not uniq_in_standby) and (not uniq_in_active):
+            logger.info(
+                f"Конфигурации контекста {context} МСЭ {active_fw.name}/{standby_fw.name} равны"
+            )
+
+    
+    
+    send_mail('Лог во вложении', files = attached_files, **mail_config.dict())
     pass
 
 

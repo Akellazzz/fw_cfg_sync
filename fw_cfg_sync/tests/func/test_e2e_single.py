@@ -8,7 +8,7 @@ from ...functions.backup_cfg import save_run_cfg_locally
 from ...functions.create_cfg_for_standby import create_cfg_for_standby
 from ...functions.deploy_cfg_to_standby import deploy_cfg_to_standby
 from ...functions.deploy_cfg_to_standby import clear_config
-from ...functions.compare_cfg import compare_cfg
+from ...functions.old.compare_cfg import compare_cfg
 from ...functions.helpers import init_config
 from ...functions.helpers import PARSE_DICT, config_parser, erase_file
 from ...functions.connection import send_config_from_file
