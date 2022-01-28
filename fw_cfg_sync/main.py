@@ -172,23 +172,28 @@ def main():
             standby_fw.contexts[context]["backup_path"],
         )
         if uniq_in_standby:
-            msg = f"На резервном МСЭ {standby_fw.name}-{context} найдены команды, которых нет на активном МСЭ \n{uniq_in_standby}" 
-            logger.error(msg)
-            logger.error(f"Выход")
-            send_mail(msg, files = [logfile], **mail_config.dict()) 
-            sys.exit()
-            # TODO
+            logger.info(f"На резервном МСЭ {standby_fw.name}-{context} найдены команды, которых нет на активном МСЭ: \n{uniq_in_standby}" )
         elif uniq_in_active:
-
+            logger.info(f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ: \n{uniq_in_active}" )
             backup_dir = os.environ.get('FW-CFG-SYNC_BACKUPS')
-            uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
+            # uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
+            uniq_in_active_filename = context + "_" + datetime_now + "_uniq_in_active.txt"
             commands_for_standby = os.path.join(backup_dir, standby_fw.name, uniq_in_active_filename)
 
+            uniq_in_standby_filename = context + "_" + datetime_now + "_uniq_in_standby.txt"
+            commands_for_active = os.path.join(backup_dir, active_fw.name, uniq_in_standby_filename)
+
+            with open(commands_for_active, "w") as f:
+                f.write(uniq_in_standby)
+                logger.info(
+                    f"Дельта для {active_fw.name}-{context} сохранена в файл {commands_for_active}"
+                )
             with open(commands_for_standby, "w") as f:
                 f.write(uniq_in_active)
                 logger.info(
                     f"Дельта для {standby_fw.name}-{context} сохранена в файл {commands_for_standby}"
                 )
+            attached_files.append(commands_for_active)
             attached_files.append(commands_for_standby)
         elif (not uniq_in_standby) and (not uniq_in_active):
             logger.info(
