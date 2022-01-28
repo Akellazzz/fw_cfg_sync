@@ -23,6 +23,7 @@ devices:
       # host: 192.168.89.114
       host: 192.168.89.115
       username: aaa
+      fast_cli: True
       # password: aaa
       enable_required: True
     
