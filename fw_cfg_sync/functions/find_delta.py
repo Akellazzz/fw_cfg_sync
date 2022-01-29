@@ -93,7 +93,45 @@ def find_delta(name1: str, file1: str, name2: str, file2: str) -> tuple:
 
     return file1_uniq, file2_uniq
 
+def create_diff_files(attached_files, active_fw, standby_fw, datetime_now ):
+    for context in active_fw.contexts:
+        uniq_in_active, uniq_in_standby = find_delta(
+            "active",
+            active_fw.contexts[context]["backup_path"],
+            "standby",
+            standby_fw.contexts[context]["backup_path"],
+        )
+        if uniq_in_standby:
+            logger.info(f"На резервном МСЭ {standby_fw.name}-{context} найдены команды, которых нет на активном МСЭ" )
+            logger.debug(f"{uniq_in_standby}")
+        if uniq_in_active:
+            logger.info(f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ" )
+            logger.debug(f"{uniq_in_active}")
+            backup_dir = os.environ.get('FW-CFG-SYNC_BACKUPS')
+            # uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
+            uniq_in_active_filename = context + "_" + datetime_now + "_uniq_in_active.txt"
+            commands_for_standby = os.path.join(backup_dir, standby_fw.name, uniq_in_active_filename)
 
+            uniq_in_standby_filename = context + "_" + datetime_now + "_uniq_in_standby.txt"
+            commands_for_active = os.path.join(backup_dir, active_fw.name, uniq_in_standby_filename)
+
+            with open(commands_for_active, "w") as f:
+                f.write(uniq_in_standby)
+                logger.info(
+                    f"Дельта для {active_fw.name}-{context} сохранена в файл {commands_for_active}"
+                )
+            with open(commands_for_standby, "w") as f:
+                f.write(uniq_in_active)
+                logger.info(
+                    f"Дельта для {standby_fw.name}-{context} сохранена в файл {commands_for_standby}"
+                )
+            attached_files.append(commands_for_active)
+            attached_files.append(commands_for_standby)
+        if (not uniq_in_standby) and (not uniq_in_active):
+            logger.info(
+                f"Конфигурации контекста {context} МСЭ {active_fw.name}/{standby_fw.name} равны"
+            )
+    return active_fw, standby_fw, attached_files
 
 # file1_uniq, file2_uniq = find_delta(
 #     "active",

@@ -4,8 +4,10 @@ import sys
 from functions.connections import Multicontext
 from functions.load_config import load_inventory, load_mail_config
 from functions.send_mail import send_mail
-from argparse import ArgumentParser, RawTextHelpFormatter
 from functions.find_delta import find_delta
+from functions.find_delta import create_diff_files
+from functions.check_role import check_role
+from argparse import ArgumentParser, RawTextHelpFormatter
 from datetime import datetime
 from copy import deepcopy
 from loguru import logger
@@ -139,67 +141,9 @@ def main():
             fw.get_context_backup(context)
             fw.save_backup_to_file(context, datetime_now)
 
-    if environment == 'dev':
-        active_fw = deepcopy(devices[0])
-        standby_fw = deepcopy(devices[0])
-        for context in standby_fw.contexts:
-            standby_fw.contexts[context]["backup_path"] = "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-25_18-51-21.txt"
+    active_fw, standby_fw = check_role(environment, app_config, devices)
 
-
-    elif environment == 'prod':
-        with open(app_config, "r", encoding='utf-8') as stream:
-            try:
-                cfg = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
-        active_name = cfg["prod_env_temp_vars"]["active_fw"]
-        standby_name = cfg["prod_env_temp_vars"]["standby_fw"]
-        for fw in devices:
-            if fw.name == active_name:
-                active_fw = fw
-            elif fw.name == standby_name:
-                standby_fw = fw
-
-
-    assert active_fw.contexts.keys() == standby_fw.contexts.keys()
-
-    for context in active_fw.contexts:
-        commands_for_standby = ""
-        uniq_in_active, uniq_in_standby = find_delta(
-            "active",
-            active_fw.contexts[context]["backup_path"],
-            "standby",
-            standby_fw.contexts[context]["backup_path"],
-        )
-        if uniq_in_standby:
-            logger.info(f"На резервном МСЭ {standby_fw.name}-{context} найдены команды, которых нет на активном МСЭ: \n{uniq_in_standby}" )
-        if uniq_in_active:
-            logger.info(f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ: \n{uniq_in_active}" )
-            backup_dir = os.environ.get('FW-CFG-SYNC_BACKUPS')
-            # uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
-            uniq_in_active_filename = context + "_" + datetime_now + "_uniq_in_active.txt"
-            commands_for_standby = os.path.join(backup_dir, standby_fw.name, uniq_in_active_filename)
-
-            uniq_in_standby_filename = context + "_" + datetime_now + "_uniq_in_standby.txt"
-            commands_for_active = os.path.join(backup_dir, active_fw.name, uniq_in_standby_filename)
-
-            with open(commands_for_active, "w") as f:
-                f.write(uniq_in_standby)
-                logger.info(
-                    f"Дельта для {active_fw.name}-{context} сохранена в файл {commands_for_active}"
-                )
-            with open(commands_for_standby, "w") as f:
-                f.write(uniq_in_active)
-                logger.info(
-                    f"Дельта для {standby_fw.name}-{context} сохранена в файл {commands_for_standby}"
-                )
-            attached_files.append(commands_for_active)
-            attached_files.append(commands_for_standby)
-        if (not uniq_in_standby) and (not uniq_in_active):
-            logger.info(
-                f"Конфигурации контекста {context} МСЭ {active_fw.name}/{standby_fw.name} равны"
-            )
-
+    active_fw, standby_fw, attached_files = create_diff_files(attached_files, active_fw, standby_fw, datetime_now )
     
     
     send_mail('Лог во вложении', files = attached_files, **mail_config.dict())
