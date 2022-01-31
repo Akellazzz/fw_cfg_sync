@@ -59,24 +59,21 @@ class Config(BaseModel):
 
 def load_inventory(file):
     # print(file)
-    with open(file, "r", encoding='utf-8') as stream:
+    with open(file, "r", encoding="utf-8") as stream:
         try:
             cfg = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
     # print(cfg["prerequisites"])
     # print(cfg["devices"])
-    return Config(
-        prerequisites=cfg["prerequisites"], devices=cfg["devices"]
-    )
+    return Config(prerequisites=cfg["prerequisites"], devices=cfg["devices"])
 
 
 def load_mail_config(file):
     # print(file)
-    with open(file, "r", encoding='utf-8') as stream:
+    with open(file, "r", encoding="utf-8") as stream:
         try:
             cfg = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
-    return MailConfig(**cfg.get('mail_reports'))
-    
+    return MailConfig(**cfg.get("mail_reports"))

@@ -125,8 +125,8 @@ class Multicontext(BaseConnection):
 
         result = self.send_command_to_context(command="show run", context=context)
         if result and result.endswith(": end"):
-            
-            self.contexts[context] = {'config': result}
+
+            self.contexts[context] = {"config": result}
             logger.info(
                 f"С контекста {self.name}: {context} успешно считана конфигурация"
             )
@@ -142,12 +142,12 @@ class Multicontext(BaseConnection):
         filename = context + "_" + datetime_now + ".txt"
         # full_path = os.path.join(dirname, filename)
         # main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
-        
+
         # путь к общей директории для сохранения бэкапов МСЭ
-        parent_backup_dir = os.environ.get('FW-CFG-SYNC_BACKUPS')
+        parent_backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
 
         # путь к  директории для сохранения бэкапов контекстов
-        backup_dir = os.path.join(parent_backup_dir, self.name)  
+        backup_dir = os.path.join(parent_backup_dir, self.name)
 
         if not os.path.exists(backup_dir):
             os.mkdir(backup_dir)
@@ -155,10 +155,9 @@ class Multicontext(BaseConnection):
 
         # full_path = os.path.join(main_dir, "fw_configs", self.name,  filename)
         full_path = os.path.join(backup_dir, filename)
-        self.contexts[context]['backup_path'] = full_path
+        self.contexts[context]["backup_path"] = full_path
         with open(full_path, "w") as f:
-            f.write(self.contexts[context]['config'])
+            f.write(self.contexts[context]["config"])
             logger.info(
                 f"Конфигурация контекста {self.name}: {context} сохранена в файл {full_path}"
             )
-

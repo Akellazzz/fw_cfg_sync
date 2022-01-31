@@ -1,15 +1,12 @@
 import os
-import yaml
 import sys
 from functions.connections import Multicontext
 from functions.load_config import load_inventory, load_mail_config
 from functions.send_mail import send_mail
-from functions.find_delta import find_delta
 from functions.find_delta import create_diff_files
 from functions.check_role import check_role
 from argparse import ArgumentParser, RawTextHelpFormatter
 from datetime import datetime
-from copy import deepcopy
 from loguru import logger
 
 
@@ -41,8 +38,7 @@ def getargs():
 
 
 def get_inventory(inv):
-    '''
-    '''
+    """ """
     # TODO
     devices = []
     for device in inv.devices:
@@ -67,26 +63,24 @@ def get_inventory(inv):
     return devices
 
 
-
 def main():
 
     # среда dev/prod
-    environment = os.environ.get('FW-CFG-SYNC_ENVIRONMENT')
+    environment = os.environ.get("FW-CFG-SYNC_ENVIRONMENT")
 
     # путь к конфигурации программы
-    app_config_path = os.environ.get('FW-CFG-SYNC_APP_CONFIG')
+    app_config_path = os.environ.get("FW-CFG-SYNC_APP_CONFIG")
 
     # директория для сохранения логов
-    app_log_dir = os.environ.get('FW-CFG-SYNC_LOGDIR')
+    app_log_dir = os.environ.get("FW-CFG-SYNC_LOGDIR")
 
     # # путь к основной директории
-    # main_dir = os.path.dirname(sys.argv[0])  
+    # main_dir = os.path.dirname(sys.argv[0])
 
-        
     args = getargs()
     datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    
-    logfilename = f'fw_cfg_sync_{datetime_now}.log'
+
+    logfilename = f"fw_cfg_sync_{datetime_now}.log"
     logfile = os.path.join(app_log_dir, logfilename)
     log_config = {
         "handlers": [
@@ -96,7 +90,7 @@ def main():
                 "retention": "30 days",
                 "backtrace": True,
                 "diagnose": True,
-                "encoding": "utf-8"
+                "encoding": "utf-8",
             },
         ]
     }
@@ -112,7 +106,7 @@ def main():
         msg = "В переменных среды не найдена FW-CFG-SYNC_APP_CONFIG, указывающая путь к конфигурации программы"
         logger.error(msg)
         sys.exit(msg)
-        
+
     app_config = os.path.join(app_config_path, "app_config.yaml")
     mail_config = load_mail_config(app_config)
     attached_files = [logfile]
@@ -121,20 +115,18 @@ def main():
     inv = load_inventory(inv_path)
 
     devices = get_inventory(inv)
-    
+
     for fw in devices:
         fw.check_reachability()
         if not fw.is_reachable:
             msg = f"Не удалось подключиться к {fw.name}"
-            send_mail(msg, files = [logfile], **mail_config.dict()) 
+            send_mail(msg, files=[logfile], **mail_config.dict())
             sys.exit(msg)
-
 
     for fw in devices:
         fw.get_contexts()
     #     for context in fw.contexts:
     #         fw.is_active = check_role(context)  # if it's active site sets fw.is_active = True  else False
-        
 
     for fw in devices:
         for context in fw.contexts:
@@ -143,10 +135,11 @@ def main():
 
     active_fw, standby_fw = check_role(environment, app_config, devices)
 
-    active_fw, standby_fw, attached_files = create_diff_files(attached_files, active_fw, standby_fw, datetime_now )
-    
-    
-    send_mail('Лог во вложении', files = attached_files, **mail_config.dict())
+    active_fw, standby_fw, attached_files = create_diff_files(
+        attached_files, active_fw, standby_fw, datetime_now
+    )
+
+    send_mail("Лог во вложении", files=attached_files, **mail_config.dict())
     pass
 
 
