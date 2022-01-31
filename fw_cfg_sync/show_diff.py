@@ -17,6 +17,7 @@ import os
 from loguru import logger
 from ciscoconfparse import CiscoConfParse
 
+
 def getargs():
 
     parser = ArgumentParser(
@@ -52,7 +53,6 @@ def getargs():
         required=True,
     )
     return parser.parse_args()
-
 
 
 def get_parser_config():
@@ -96,7 +96,6 @@ def analize_tr(items):
     return empty_tr, not_empty_tr
 
 
-
 def without_empty_tr(file1, file2):
 
     with open(file1, "r") as f1, open(file2, "r") as f2:
@@ -104,10 +103,10 @@ def without_empty_tr(file1, file2):
         parse2 = CiscoConfParse(f2.readlines())
 
     parser_config = get_parser_config()
-    
+
     ### time-range
     ###
-    template = parser_config['time-range'].get("template")
+    template = parser_config["time-range"].get("template")
     res_original_tr1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
     res_original_tr2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]
 
@@ -118,7 +117,7 @@ def without_empty_tr(file1, file2):
 
     ### acl
     ###
-    template = parser_config['access-list'].get("template")
+    template = parser_config["access-list"].get("template")
     res_original_acl1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
     res_original_acl2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]
 
@@ -128,7 +127,7 @@ def without_empty_tr(file1, file2):
 
     acl_list1 = [x[0].strip() for x in res_original_acl1]
     acl_list2 = [x[0].strip() for x in res_original_acl2]
-        
+
     acl_with_cutted_empty_tr_1 = cut_empty_tr(acl_list1, empty_tr_1)
     acl_with_cutted_empty_tr_2 = cut_empty_tr(acl_list2, empty_tr_2)
 
@@ -140,7 +139,9 @@ def without_empty_tr(file1, file2):
 
             acl_wo_tr = i.split(" time-range ")[0].strip()
             tr = i.split(" time-range ")[-1].strip()
-            if tr in empty_tr_1 and acl_wo_tr in (acl_list2 + acl_with_cutted_empty_tr_2):
+            if tr in empty_tr_1 and acl_wo_tr in (
+                acl_list2 + acl_with_cutted_empty_tr_2
+            ):
                 continue
             else:
                 acl_only_in_1.append(i)
@@ -154,7 +155,9 @@ def without_empty_tr(file1, file2):
 
             acl_wo_tr = i.split(" time-range ")[0].strip()
             tr = i.split(" time-range ")[-1].strip()
-            if tr in empty_tr_2 and acl_wo_tr in (acl_list1 + acl_with_cutted_empty_tr_1):
+            if tr in empty_tr_2 and acl_wo_tr in (
+                acl_list1 + acl_with_cutted_empty_tr_1
+            ):
                 continue
             else:
                 acl_only_in_2.append(i)
@@ -164,32 +167,31 @@ def without_empty_tr(file1, file2):
     tr_in_use1 = get_tr_in_use(acl_only_in_1)
     tr_in_use2 = get_tr_in_use(acl_only_in_2)
 
-    file1_result = ''
-    file2_result = ''
+    file1_result = ""
+    file2_result = ""
     for block in parser_config:
         uniq_in_file1 = []
         uniq_in_file2 = []
-        
+
         template = parser_config[block].get("template")
-        if block == 'time-range':
+        if block == "time-range":
 
             uniq_in_file1, uniq_in_file2 = get_uniq(parse1, parse2, template)
             if uniq_in_file1:
                 for parent_and_children in uniq_in_file1:
-                    parent = parent_and_children[0].strip() # time-range empty_tr1
-                    if parent.split()[-1] in tr_in_use1: # empty_tr1
+                    parent = parent_and_children[0].strip()  # time-range empty_tr1
+                    if parent.split()[-1] in tr_in_use1:  # empty_tr1
                         file1_result += "".join(parent_and_children)
 
             if uniq_in_file2:
                 for parent_and_children in uniq_in_file2:
-                    parent = parent_and_children[0].strip() # time-range empty_tr1
-                    if parent.split()[-1] in tr_in_use2: # empty_tr1
+                    parent = parent_and_children[0].strip()  # time-range empty_tr1
+                    if parent.split()[-1] in tr_in_use2:  # empty_tr1
                         file2_result += "".join(parent_and_children)
 
-        elif block == 'access-list':
-            file1_result += '\n'.join(acl_only_in_1)
-            file2_result += '\n'.join(acl_only_in_2)
-
+        elif block == "access-list":
+            file1_result += "\n".join(acl_only_in_1)
+            file2_result += "\n".join(acl_only_in_2)
 
         else:
             uniq_in_file1, uniq_in_file2 = get_uniq(parse1, parse2, template)
@@ -207,6 +209,7 @@ def without_empty_tr(file1, file2):
 
     return file1_result, file2_result
 
+
 def main():
     args = getargs()
     if args:
@@ -218,22 +221,21 @@ def main():
         logger.add(sys.stdout, format="{message}", level="INFO")
     # breakpoint()
 
-
     file1 = args.file1
     file2 = args.file2
-    uniq_in_file1, uniq_in_file2 = find_delta(file1, file2)
     if ignore_empty_timeranges:
-        # uniq_in_file1_wo_empty_tr, uniq_in_file2_wo_empty_tr = without_empty_tr(file1, file2, uniq_in_file1, uniq_in_file2)
-        without_empty_tr(file1, file2)
+        uniq_in_file1, uniq_in_file2 = without_empty_tr(file1, file2)
+    else:
+        uniq_in_file1, uniq_in_file2 = find_delta(file1, file2)
 
     # time.sleep(1)
     if uniq_in_file1:
-        print(f"Команды только в {file1}:\n")
+        print(f"\nКоманды только в {file1}:\n")
         print(f"{uniq_in_file1}")
     else:
         print(f"В файле {file1} нет уникальных команд")
     if uniq_in_file2:
-        print(f"Команды только в {file2}:\n")
+        print(f"\nКоманды только в {file2}:\n")
         print(f"{uniq_in_file2}")
     else:
         print(f"В файле {file2} нет уникальных команд")

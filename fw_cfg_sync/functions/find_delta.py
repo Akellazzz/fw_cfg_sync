@@ -32,6 +32,7 @@ def block_parser(parse, template):
         res = parse.find_objects(f"{template}")
     return res
 
+
 def get_uniq(parse1, parse2, template):
     res1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
     res2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]

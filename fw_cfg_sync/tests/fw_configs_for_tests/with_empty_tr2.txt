@@ -22,26 +22,26 @@ time-range empty_tr2
 time-range not_empty_tr2
  absolute end 00:00 16 December 2025
 !
-object network on0
+object network on2
  host 1.1.1.1
 object-group protocol obj_prot_both
  description test_og_prot
  protocol-object icmp
-object-group protocol obj_prot46
+object-group protocol obj_prot46_only2
  description test_og_prot
  protocol-object icmp
-object-group protocol obj_prot47
+object-group protocol obj_prot47_only2
  description test_og_prot
  protocol-object icmp
-object-group protocol obj_prot48
+object-group protocol obj_prot48_only2
  description test_og_prot
  protocol-object icmp
 object-group protocol obj_prot49
  description test_og_prot
  protocol-object icmp
-access-list test extended permit ip any any time-range empty_tr 
-access-list test extended permit ip any any time-range not_empty_tr 
-access-list test extended permit icmp any any 
+access-list test21 extended permit ip any any time-range empty_tr2 
+access-list test22 extended permit ip any any time-range not_empty_tr2 
+access-list test23 extended permit icmp any any 
 access-list test_both extended permit icmp any any 
 pager lines 24
 mtu test1 1500

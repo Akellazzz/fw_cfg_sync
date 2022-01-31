@@ -25,7 +25,7 @@ time-range not_empty_tr_in_use1
 time-range not_empty_tr_not_in_use1
  absolute end 00:00 16 December 2025
 !
-object network on0
+object network on1
  host 1.1.1.1
 object-group protocol obj_prot_both
  description test_og_prot
