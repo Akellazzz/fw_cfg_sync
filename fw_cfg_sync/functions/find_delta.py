@@ -7,7 +7,7 @@ import os
 def get_parser_config():
     app_config_path = os.environ.get("FW-CFG-SYNC_APP_CONFIG")
     config_file = os.path.join(app_config_path, "parser_config.yaml")
-    logger.debug(f"Конфигурация парсера: {config_file} ")
+    # logger.debug(f"Конфигурация парсера: {config_file} ")
 
     with open(config_file) as f:
         parser_config = yaml.safe_load(f)
@@ -32,6 +32,13 @@ def block_parser(parse, template):
         res = parse.find_objects(f"{template}")
     return res
 
+def get_uniq(parse1, parse2, template):
+    res1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
+    res2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]
+    file1_uniq = [i for i in res1 if i not in res2]
+    file2_uniq = [i for i in res2 if i not in res1]
+    return file1_uniq, file2_uniq
+
 
 def find_delta(file1: str, file2: str) -> tuple[str, str]:
     """Возвращает команды конфигурации, уникальные для каждого из МСЭ
@@ -54,14 +61,13 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
         parse1 = CiscoConfParse(f1.readlines())
         parse2 = CiscoConfParse(f2.readlines())
     for block in parser_config:
-        file1_uniq = []
-        file2_uniq = []
         template = parser_config[block].get("template")
         order_matters_flag = parser_config[block].get("order_matters")
-        res1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
-        res2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]
-        file1_uniq = [i for i in res1 if i not in res2]
-        file2_uniq = [i for i in res2 if i not in res1]
+        file1_uniq, file2_uniq = get_uniq(parse1, parse2, template)
+        # res1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
+        # res2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]
+        # file1_uniq = [i for i in res1 if i not in res2]
+        # file2_uniq = [i for i in res2 if i not in res1]
 
         if file1_uniq:
             file1_out = str()
@@ -133,8 +139,8 @@ def create_diff_files(attached_files, active_fw, standby_fw, datetime_now):
     return active_fw, standby_fw, attached_files
 
 
-file1_uniq, file2_uniq = find_delta(
-    "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-27_16-06-31.txt",
-    "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-25_18-51-21.txt",
-)
-pass
+# file1_uniq, file2_uniq = find_delta(
+#     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-27_16-06-31.txt",
+#     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-25_18-51-21.txt",
+# )
+# pass

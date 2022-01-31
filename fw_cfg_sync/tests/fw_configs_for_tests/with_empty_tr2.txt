@@ -1,0 +1,95 @@
+: Saved
+: 
+: Hardware:   ASA5520
+:
+ASA Version 9.1(5)16 <context>
+!
+hostname test1
+enable password 8Ry2YjIyt7RRXU24 encrypted
+names
+!
+interface Ethernet1
+ nameif test1
+ security-level 0
+ no ip address
+!
+time-range empty_tr_in_use1
+!
+time-range empty_tr1
+!
+time-range not_empty_tr
+ absolute end 00:00 16 December 2025
+!
+time-range not_empty_tr
+ absolute end 00:00 16 December 2025
+!
+object network on0
+ host 1.1.1.1
+object-group protocol obj_prot46
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot47
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot48
+ description test_og_prot
+ protocol-object icmp
+object-group protocol obj_prot49
+ description test_og_prot
+ protocol-object icmp
+access-list test extended permit ip any any time-range empty_tr 
+access-list test extended permit ip any any time-range not_empty_tr 
+access-list test extended permit icmp any any 
+pager lines 24
+mtu test1 1500
+icmp unreachable rate-limit 1 burst-size 1
+no asdm history enable
+arp timeout 14400
+access-group test in interface test1
+timeout xlate 3:00:00
+timeout pat-xlate 0:00:30
+timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 icmp 0:00:02
+timeout sunrpc 0:10:00 h323 0:05:00 h225 1:00:00 mgcp 0:05:00 mgcp-pat 0:05:00
+timeout sip 0:30:00 sip_media 0:02:00 sip-invite 0:03:00 sip-disconnect 0:02:00
+timeout sip-provisional-media 0:02:00 uauth 0:05:00 absolute
+timeout tcp-proxy-reassembly 0:01:00
+timeout floating-conn 0:00:00
+user-identity default-domain LOCAL
+no snmp-server location
+no snmp-server contact
+crypto ipsec security-association pmtu-aging infinite
+telnet timeout 5
+ssh stricthostkeycheck
+ssh timeout 5
+ssh key-exchange group dh-group1-sha1
+no threat-detection statistics tcp-intercept
+!
+class-map inspection_default
+ match default-inspection-traffic
+!
+!
+policy-map type inspect dns migrated_dns_map_1
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+policy-map global_policy
+ class inspection_default
+  inspect dns migrated_dns_map_1 
+  inspect ftp 
+  inspect h323 h225 
+  inspect h323 ras 
+  inspect ip-options 
+  inspect netbios 
+  inspect rsh 
+  inspect rtsp 
+  inspect skinny  
+  inspect esmtp 
+  inspect sqlnet 
+  inspect sunrpc 
+  inspect tftp 
+  inspect sip  
+  inspect xdmcp 
+!
+service-policy global_policy global
+Cryptochecksum:9efbf9575f78570b827bea6f8e3ef192
+: end
