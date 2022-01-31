@@ -19,12 +19,18 @@ def test_without_empty_tr():
     )
 
     uniq_in_file1, uniq_in_file2 = without_empty_tr(file1, file2)
-    breakpoint()
+    # breakpoint()
     assert uniq_in_file1 
+    assert uniq_in_file2 
+    assert "_both" not in uniq_in_file1
+    assert "_both" not in uniq_in_file2
     assert 'absolute end 00:00 16 December 2025_in_use1' in uniq_in_file1 
     assert 'time-range empty_tr_not_in_use1' not in uniq_in_file1 
-    assert 'access-list test extended permit ip any any time-range empty_tr_in_use1' not in uniq_in_file1 
-    assert 'access-list test extended permit ip any any time-range not_empty_tr_in_use1' in uniq_in_file1 
+    assert 'empty_tr_not_in_use' not in uniq_in_file1 
+     
+    assert 'access-list test1 extended permit ip any any time-range empty_tr_in_use1' in uniq_in_file1 
+    assert 'access-list test2 extended permit ip any any time-range not_empty_tr_in_use1' in uniq_in_file1  
+    assert 'access-list test3 extended permit ip any any' in uniq_in_file1   
+    assert 'access-list test4 extended permit icmp any any' in uniq_in_file1  
 
-    assert uniq_in_file2 
-    breakpoint()
+    # breakpoint()

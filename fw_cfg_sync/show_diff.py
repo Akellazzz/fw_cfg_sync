@@ -81,8 +81,8 @@ def cut_empty_tr(acl_list, empty_tr):
     return acl_with_cutted_empty_tr
 
 
-def get_tr_in_use(acl_with_cutted_empty_tr: list) -> list:
-    return [i.split(" time-range ")[-1].strip() for i in acl_with_cutted_empty_tr if " time-range " in i]
+def get_tr_in_use(acl: list) -> list:
+    return [i.split(" time-range ")[-1].strip() for i in acl if " time-range " in i]
 
 
 def analize_tr(items):
@@ -132,8 +132,38 @@ def without_empty_tr(file1, file2):
     acl_with_cutted_empty_tr_1 = cut_empty_tr(acl_list1, empty_tr_1)
     acl_with_cutted_empty_tr_2 = cut_empty_tr(acl_list2, empty_tr_2)
 
-    ### acl
-    ###
+    acl_only_in_1 = []
+    for i in acl_list1:
+        if i in (acl_list2 + acl_with_cutted_empty_tr_2):
+            continue
+        elif " time-range " in i:
+
+            acl_wo_tr = i.split(" time-range ")[0].strip()
+            tr = i.split(" time-range ")[-1].strip()
+            if tr in empty_tr_1 and acl_wo_tr in (acl_list2 + acl_with_cutted_empty_tr_2):
+                continue
+            else:
+                acl_only_in_1.append(i)
+        else:
+            acl_only_in_1.append(i)
+
+    for i in acl_list2:
+        if i in (acl_list1 + acl_with_cutted_empty_tr_1):
+            continue
+        elif " time-range " in i:
+
+            acl_wo_tr = i.split(" time-range ")[0].strip()
+            tr = i.split(" time-range ")[-1].strip()
+            if tr in empty_tr_2 and acl_wo_tr in (acl_list1 + acl_with_cutted_empty_tr_1):
+                continue
+            else:
+                acl_only_in_2.append(i)
+        else:
+            acl_only_in_2.append(i)
+
+    tr_in_use1 = get_tr_in_use(acl_only_in_1)
+    tr_in_use2 = get_tr_in_use(acl_only_in_2)
+
     file1_result = ''
     file2_result = ''
     for block in parser_config:
@@ -142,8 +172,6 @@ def without_empty_tr(file1, file2):
         
         template = parser_config[block].get("template")
         if block == 'time-range':
-            tr_in_use1 = get_tr_in_use(acl_with_cutted_empty_tr_1)
-            tr_in_use2 = get_tr_in_use(acl_with_cutted_empty_tr_2)
 
             uniq_in_file1, uniq_in_file2 = get_uniq(parse1, parse2, template)
             if uniq_in_file1:
@@ -159,18 +187,9 @@ def without_empty_tr(file1, file2):
                         file2_result += "".join(parent_and_children)
 
         elif block == 'access-list':
-            uniq_in_file1, uniq_in_file2 = get_uniq(parse1, parse2, template)
-            if uniq_in_file1:
-                file1_out = str()
-                for parent_and_children in uniq_in_file1:
-                    file1_out += "".join(parent_and_children)
-                file1_result += file1_out
+            file1_result += '\n'.join(acl_only_in_1)
+            file2_result += '\n'.join(acl_only_in_2)
 
-            if uniq_in_file2:
-                file2_out = str()
-                for parent_and_children in uniq_in_file2:
-                    file2_out += "".join(parent_and_children)
-                file2_result += file2_out
 
         else:
             uniq_in_file1, uniq_in_file2 = get_uniq(parse1, parse2, template)

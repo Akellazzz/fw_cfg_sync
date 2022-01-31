@@ -13,18 +13,20 @@ interface Ethernet1
  security-level 0
  no ip address
 !
-time-range empty_tr_in_use1
+time-range empty_tr_in_use2
 !
-time-range empty_tr1
+time-range empty_tr_in_both
 !
-time-range not_empty_tr
- absolute end 00:00 16 December 2025
+time-range empty_tr2
 !
-time-range not_empty_tr
+time-range not_empty_tr2
  absolute end 00:00 16 December 2025
 !
 object network on0
  host 1.1.1.1
+object-group protocol obj_prot_both
+ description test_og_prot
+ protocol-object icmp
 object-group protocol obj_prot46
  description test_og_prot
  protocol-object icmp
@@ -40,6 +42,7 @@ object-group protocol obj_prot49
 access-list test extended permit ip any any time-range empty_tr 
 access-list test extended permit ip any any time-range not_empty_tr 
 access-list test extended permit icmp any any 
+access-list test_both extended permit icmp any any 
 pager lines 24
 mtu test1 1500
 icmp unreachable rate-limit 1 burst-size 1
