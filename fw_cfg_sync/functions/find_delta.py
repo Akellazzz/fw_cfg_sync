@@ -33,65 +33,49 @@ def block_parser(parse, template):
     return res
 
 
-def find_delta(name1: str, file1: str, name2: str, file2: str) -> tuple:
+def find_delta(file1: str, file2: str) -> tuple[str, str]:
     """Возвращает команды конфигурации, уникальные для каждого из МСЭ
 
     Parameters
     ----------
-    name1 - Имя МСЭ 1
-
     file1 - Путь к файлу конфигурации МСЭ 1
-
-    name2 - Имя МСЭ 2
 
     file2 - Путь к файлу конфигурации МСЭ 2
 
     Returns
     -------
-    Кортеж из 2 элементов с конфигурацией, уникальной для МСЭ 1 и МСЭ 2 соответственно
+    Два кортежа с уникальными для МСЭ 1 и МСЭ 2 командами
 
     """
-    file1_uniq = ""
-    file2_uniq = ""
+    file1_result = ""
+    file2_result = ""
     parser_config = get_parser_config()
     with open(file1, "r") as f1, open(file2, "r") as f2:
         parse1 = CiscoConfParse(f1.readlines())
         parse2 = CiscoConfParse(f2.readlines())
     for block in parser_config:
+        file1_uniq = []
+        file2_uniq = []
         template = parser_config[block].get("template")
-        res1 = set(tuple(i.ioscfg) for i in block_parser(parse1, template))
-        res2 = set(tuple(i.ioscfg) for i in block_parser(parse2, template))
-        if res1 == res2:
-            logger.debug(f"{block:<20} равны")
+        order_matters_flag = parser_config[block].get("order_matters")
+        res1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
+        res2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]
+        file1_uniq = [i for i in res1 if i not in res2]
+        file2_uniq = [i for i in res2 if i not in res1]
 
-        else:
-            logger.debug(f"{block:<20} не равны")
+        if file1_uniq:
+            file1_out = str()
+            for parent_and_children in file1_uniq:
+                file1_out += "".join(parent_and_children)
+            file1_result += file1_out
 
-            diff = res1 ^ res2
-            if diff:
-                file1_only = res1.difference(res2)
-                file2_only = res2.difference(res1)
+        if file2_uniq:
+            file2_out = str()
+            for parent_and_children in file2_uniq:
+                file2_out += "".join(parent_and_children)
+            file2_result += file2_out
 
-                if file1_only:
-                    # logger.debug(f"---- Только в {name1}:")
-                    file1_out = str()
-                    for i in list(file1_only):
-                        file1_out += "".join(i)
-                        # file1_out += "!"
-                    file1_uniq += file1_out
-                    # logger.debug(file1_out)
-
-                if file2_only:
-                    # logger.debug(f"---- Только в {name2}:")
-
-                    file2_out = str()
-                    for i in list(file2_only):
-                        file2_out += "".join(i)
-                        # file2_out += "!"
-                    file2_uniq += file2_out
-                    # logger.debug(file2_out)
-
-    return file1_uniq, file2_uniq
+    return file1_result, file2_result
 
 
 def create_diff_files(attached_files, active_fw, standby_fw, datetime_now):
@@ -149,10 +133,8 @@ def create_diff_files(attached_files, active_fw, standby_fw, datetime_now):
     return active_fw, standby_fw, attached_files
 
 
-# file1_uniq, file2_uniq = find_delta(
-#     "active",
-#     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-27_16-06-31.txt",
-#     "standby",
-#     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-25_18-51-21.txt"
-# )
-# pass
+file1_uniq, file2_uniq = find_delta(
+    "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-27_16-06-31.txt",
+    "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-25_18-51-21.txt",
+)
+pass

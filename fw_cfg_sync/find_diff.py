@@ -28,12 +28,7 @@ import sys
 
 file1 = str(sys.argv[1])
 file2 = str(sys.argv[2])
-uniq_in_file1, uniq_in_file2 = find_delta(
-    file1,
-    file1,
-    file2,
-    file2
-)
+uniq_in_file1, uniq_in_file2 = find_delta(file1, file1, file2, file2)
 time.sleep(1)
 if uniq_in_file1:
     print(f"Команды только в {file1}")

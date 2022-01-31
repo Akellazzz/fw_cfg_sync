@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "fw_configs"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
