@@ -88,9 +88,7 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
 def create_diff_files(attached_files, active_fw, standby_fw, datetime_now):
     for context in active_fw.contexts:
         uniq_in_active, uniq_in_standby = find_delta(
-            "active",
             active_fw.contexts[context]["backup_path"],
-            "standby",
             standby_fw.contexts[context]["backup_path"],
         )
 
