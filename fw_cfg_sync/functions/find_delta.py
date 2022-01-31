@@ -63,12 +63,7 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
         parse2 = CiscoConfParse(f2.readlines())
     for block in parser_config:
         template = parser_config[block].get("template")
-        order_matters_flag = parser_config[block].get("order_matters")
         file1_uniq, file2_uniq = get_uniq(parse1, parse2, template)
-        # res1 = [tuple(i.ioscfg) for i in block_parser(parse1, template)]
-        # res2 = [tuple(i.ioscfg) for i in block_parser(parse2, template)]
-        # file1_uniq = [i for i in res1 if i not in res2]
-        # file2_uniq = [i for i in res2 if i not in res1]
 
         if file1_uniq:
             file1_out = str()
