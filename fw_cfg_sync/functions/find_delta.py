@@ -81,6 +81,7 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
 
 
 def create_diff_files(attached_files, active_fw, standby_fw, datetime_now):
+    backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
     for context in active_fw.contexts:
         uniq_in_active, uniq_in_standby = find_delta(
             active_fw.contexts[context]["backup_path"],
@@ -110,7 +111,6 @@ def create_diff_files(attached_files, active_fw, standby_fw, datetime_now):
                 f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ"
             )
             logger.debug(f"{uniq_in_active}")
-            backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
             # uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
             uniq_in_active_filename = (
                 context + "_" + datetime_now + "_uniq_in_active.txt"

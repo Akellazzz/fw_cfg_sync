@@ -29,7 +29,7 @@ def send_mail(
 
     if not enabled:
         logger.debug(
-            f"Mail is disabled by app config but send_mail is called with text: {text}"
+            f"Mail is disabled by app config but send_mail is called with text: {text} and files: {files}"
         )
 
         return

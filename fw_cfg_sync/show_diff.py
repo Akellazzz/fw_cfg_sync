@@ -212,6 +212,7 @@ def without_empty_tr(file1, file2):
 
 def main():
     args = getargs()
+    ignore_empty_timeranges = False
     if args:
         if args.verbose:
             logger.add(sys.stdout, level="DEBUG")
