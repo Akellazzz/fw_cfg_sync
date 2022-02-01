@@ -139,7 +139,7 @@ def main():
         attached_files, active_fw, standby_fw, datetime_now
     )
 
-    send_mail("Лог во вложении", files=attached_files, **mail_config.dict())
+    send_mail(f"Active FW - {active_fw.name} <br>Standby FW - {standby_fw.name}", files=attached_files, **mail_config.dict())
     pass
 
 
