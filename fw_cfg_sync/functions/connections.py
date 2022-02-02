@@ -26,10 +26,11 @@ class BaseConnection:
     """Базовый класс"""
 
     # def __init__(self, **kwargs):
-    def __init__(self, name, host, username, fast_cli, enable_required, device_type):
+    def __init__(self, name, host, username, fast_cli, enable_required, device_type, device_function):
         # self.__dict__.update(kwargs)
         self.conn = {}
         self.name = name
+        self.device_function = device_function
         self.conn["host"] = host
         self.conn["device_type"] = device_type
         self.conn["username"] = username

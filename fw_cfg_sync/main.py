@@ -1,6 +1,7 @@
 import os
 import sys
-from functions.connections import Multicontext
+from this import d
+from functions.connections import BaseConnection, Multicontext
 from functions.load_config import load_inventory, load_mail_config
 from functions.send_mail import send_mail
 from functions.find_delta import create_diff_files
@@ -37,30 +38,44 @@ def getargs():
     return parser.parse_args()
 
 
-def get_inventory(inv):
+def get_firewalls(inv):
     """ """
-    # TODO
-    devices = []
-    for device in inv.devices:
-        # active = Multicontext(
-        #     name=inv.devices["fw_a"].get("name"),
-        #     host=inv.devices["fw_a"]["connection"]["host"],
-        #     username=inv.devices["fw_a"]["connection"]["username"],
-        #     device_type=inv.devices["fw_a"]["connection"]["device_type"],
-        #     enable_required=inv.devices["fw_a"]["connection"]["enable_required"],
-        # )
-        devices.append(
-            Multicontext(
-                name=inv.devices[device].get("name"),
-                host=inv.devices[device]["connection"]["host"],
-                username=inv.devices[device]["connection"]["username"],
-                device_type=inv.devices[device]["connection"]["device_type"],
-                fast_cli=inv.devices[device]["connection"]["fast_cli"],
-                enable_required=inv.devices[device]["connection"]["enable_required"],
-            )
-        )
+    firewalls = []
 
-    return devices
+    for device in inv.devices:
+        kwargs = {'name': inv.devices[device].get("name"),
+            'host': inv.devices[device]["connection"]["host"],
+            'username': inv.devices[device]["connection"]["username"],
+            'device_type': inv.devices[device]["connection"]["device_type"],
+            'device_function': inv.devices[device]["device_function"],
+            'fast_cli': inv.devices[device]["connection"]["fast_cli"],
+            'enable_required': inv.devices[device]["connection"]["enable_required"]}
+
+        if inv.multicontext == True:
+            if inv.devices[device]["device_function"] == "fw":
+                firewalls.append(
+                    Multicontext(**kwargs)
+                )
+    assert len(firewalls) == 2
+    return firewalls
+
+
+def get_router(inv):
+
+    for device in inv.devices:
+        if inv.devices[device]["device_function"] == "router":
+            kwargs = {'name': inv.devices[device].get("name"),
+                'host': inv.devices[device]["connection"]["host"],
+                'username': inv.devices[device]["connection"]["username"],
+                'device_type': inv.devices[device]["connection"]["device_type"],
+                'device_function': inv.devices[device]["device_function"],
+                'fast_cli': inv.devices[device]["connection"]["fast_cli"],
+                'enable_required': inv.devices[device]["connection"]["enable_required"]}
+            
+            router = BaseConnection(**kwargs)
+    
+    assert router
+    return router
 
 
 def main():
@@ -109,31 +124,46 @@ def main():
 
     app_config = os.path.join(app_config_path, "app_config.yaml")
     mail_config = load_mail_config(app_config)
+    mail_text = ''
     attached_files = [logfile]
 
     inv_path = os.path.join(app_config_path, "inventory", args.filename)
     inv = load_inventory(inv_path)
 
-    devices = get_inventory(inv)
+    
+    firewalls = get_firewalls(inv)
 
-    for fw in devices:
-        fw.check_reachability()
-        if not fw.is_reachable:
-            msg = f"Не удалось подключиться к {fw.name}"
-            send_mail(msg, files=[logfile], **mail_config.dict())
-            sys.exit(msg)
+    if inv.prerequisites.get('check_route'):
+        router = get_router(inv)
+        devices = firewalls + [router]
+    else:
+        devices = firewalls
 
-    for fw in devices:
+    if environment != "dev":
+        for device in devices:
+            device.check_reachability()
+            if not device.is_reachable:
+                mail_text = f"Не удалось подключиться к {device.name}"
+                send_mail(mail_text, files=[logfile], **mail_config.dict())
+                sys.exit(mail_text)
+
+    for fw in firewalls:
         fw.get_contexts()
+        if sorted(inv.contexts_role_check) != sorted(fw.contexts):
+            msg = f'В inventory заданы контексты {sorted(inv.contexts_role_check)}, но на МСЭ {fw.name} найдены контексты {sorted(fw.contexts)}'
+            mail_text += f'{msg}<br>'
+            logger.warning(msg)
+
     #     for context in fw.contexts:
     #         fw.is_active = check_role(context)  # if it's active site sets fw.is_active = True  else False
 
-    for fw in devices:
+    active_fw, standby_fw = check_role(environment, app_config, firewalls)
+    
+    for fw in firewalls:
         for context in fw.contexts:
             fw.get_context_backup(context)
             fw.save_backup_to_file(context, datetime_now)
 
-    active_fw, standby_fw = check_role(environment, app_config, devices)
 
     active_fw, standby_fw, attached_files = create_diff_files(
         attached_files, active_fw, standby_fw, datetime_now
