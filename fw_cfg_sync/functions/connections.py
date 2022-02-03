@@ -127,7 +127,8 @@ class Multicontext(BaseConnection):
         result = self.send_command_to_context(command="show run", context=context)
         if result and result.endswith(": end"):
 
-            self.contexts[context] = {"config": result}
+            # self.contexts[context] = {"config": result}
+            self.contexts[context]["config"] = result
             logger.info(
                 f"С контекста {self.name}: {context} успешно считана конфигурация"
             )
@@ -140,7 +141,7 @@ class Multicontext(BaseConnection):
 
         # d = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # dirname = os.path.join(os.path.dirname(__file__), "fw_configs")
-        filename = context + "_" + datetime_now + ".txt"
+        filename = f'{self.name}' + "_" + context + "_" + datetime_now + ".txt"
         # full_path = os.path.join(dirname, filename)
         # main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
 

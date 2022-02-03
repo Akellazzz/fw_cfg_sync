@@ -80,57 +80,94 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
     return file1_result, file2_result
 
 
-def create_diff_files(attached_files, active_fw, standby_fw, datetime_now):
-    backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
-    for context in active_fw.contexts:
-        uniq_in_active, uniq_in_standby = find_delta(
-            active_fw.contexts[context]["backup_path"],
-            standby_fw.contexts[context]["backup_path"],
+def create_diff_files(firewalls, datetime_now) -> set:
+    
+    common_contexts = set(firewalls[0].contexts).intersection(set(firewalls[1].contexts))
+    for context in common_contexts:
+
+        fw0_delta, fw1_delta = find_delta(
+            firewalls[0].contexts[context]["backup_path"],
+            firewalls[1].contexts[context]["backup_path"],
         )
 
-        if uniq_in_standby:
-            logger.info(
-                f"На резервном МСЭ {standby_fw.name}-{context} найдены команды, которых нет на активном МСЭ"
-            )
-            logger.debug(f"{uniq_in_standby}")
-            uniq_in_standby_filename = (
-                context + "_" + datetime_now + "_uniq_in_standby.txt"
-            )
-            commands_for_active = os.path.join(
-                backup_dir, active_fw.name, uniq_in_standby_filename
-            )
-            with open(commands_for_active, "w") as f:
-                f.write(uniq_in_standby)
+        firewalls[0].contexts[context]["delta"] = fw0_delta
+        firewalls[1].contexts[context]["delta"] = fw1_delta
+
+        for fw in firewalls:
+            if fw.contexts[context]["delta"]:
+                backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
+                role = fw.contexts[context]["role"]
+                delta = fw.contexts[context]["delta"]
+                delta_filename = (f'{fw.name}_{context}_{datetime_now}_{fw.contexts[context]["role"]}_delta.txt')
+                delta_fullpath = os.path.join(backup_dir, fw.name, delta_filename)
+
+                with open(delta_fullpath, "w") as f:
+                    f.write(delta)
                 logger.info(
-                    f"Дельта для {active_fw.name}-{context} сохранена в файл {commands_for_active}"
+                    f"Дельта {fw.name}-{context} (роль - {role}) сохранена в файл {delta_fullpath}"
                 )
-            attached_files.append(commands_for_active)
+                fw.contexts[context]["delta_path"] = delta_fullpath
 
-        if uniq_in_active:
+        if (not fw0_delta) and (not fw1_delta):
             logger.info(
-                f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ"
-            )
-            logger.debug(f"{uniq_in_active}")
-            # uniq_in_active_filename = context + "_" + datetime_now + "_new_commands.txt"
-            uniq_in_active_filename = (
-                context + "_" + datetime_now + "_uniq_in_active.txt"
-            )
-            commands_for_standby = os.path.join(
-                backup_dir, standby_fw.name, uniq_in_active_filename
-            )
-            with open(commands_for_standby, "w") as f:
-                f.write(uniq_in_active)
-                logger.info(
-                    f"Дельта для {standby_fw.name}-{context} сохранена в файл {commands_for_standby}"
-                )
-            attached_files.append(commands_for_standby)
-
-        if (not uniq_in_standby) and (not uniq_in_active):
-            logger.info(
-                f"Конфигурации контекста {context} МСЭ {active_fw.name}/{standby_fw.name} равны"
+                f"Конфигурации контекста {context} МСЭ {firewalls[0].name}/{firewalls[1].name} равны"
             )
 
-    return active_fw, standby_fw, attached_files
+        # uniq_in_active, uniq_in_reserve = find_delta(
+        #     active_fw.contexts[context]["backup_path"],
+        #     reserve_fw.contexts[context]["backup_path"],
+        # )
+
+        # if uniq_in_reserve:
+        #     logger.info(
+        #         f"На резервном МСЭ {reserve_fw.name}-{context} найдены команды, которых нет на активном МСЭ"
+        #     )
+
+        #     logger.debug(f"{uniq_in_reserve}")
+
+        #     uniq_in_reserve_filename = (
+        #         f'{reserve_fw.name}' + "_" + context + "_" + datetime_now + "_reserve_delta.txt"
+        #     )
+
+        #     reserve_delta = os.path.join(
+        #         backup_dir, active_fw.name, uniq_in_reserve_filename
+        #     )
+
+        #     with open(reserve_delta, "w") as f:
+        #         f.write(uniq_in_reserve)
+        #         logger.info(
+        #             f"Дельта сохранена в файл {reserve_delta}"
+        #         )
+
+
+        # if uniq_in_active:
+        #     logger.info(
+        #         f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ"
+        #     )
+
+        #     logger.debug(f"{uniq_in_active}")
+
+        #     uniq_in_active_filename = (
+        #         f'{active_fw.name}' + "_" + context + "_" + datetime_now + "_active_delta.txt"
+        #     )
+
+        #     active_delta = os.path.join(
+        #         backup_dir, reserve_fw.name, uniq_in_active_filename
+        #     )
+
+        #     with open(active_delta, "w") as f:
+        #         f.write(uniq_in_active)
+        #         logger.info(
+        #             f"Дельта сохранена в файл {active_delta}"
+        #         )
+
+
+        # if (not uniq_in_reserve) and (not uniq_in_active):
+        #     logger.info(
+        #         f"Конфигурации контекста {context} МСЭ {active_fw.name}/{reserve_fw.name} равны"
+        #     )
+
+    return firewalls
 
 
 # file1_uniq, file2_uniq = find_delta(
