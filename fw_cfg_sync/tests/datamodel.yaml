@@ -2,58 +2,53 @@ multicontext: True
 prerequisites:
   check_description: False
   description: 
-  check_route: False
+  check_route: True
   route: 1.1.1.1 255.255.255.0
+contexts_role_check:
+  test1:
+    device: asa1
+    command: show route
+    find_string: 0.0.0.0
+    site: active
+    # site: reserve
+  test2:
+    device: asa1
+    command: show route
+    find_string: 0.0.0.0
+    site: active
+    # site: reserve
 devices:
   fw_a:
-    name: asa2
-    role: fw
+    name: asa1
+    device_function: fw
     connection:
       device_type: cisco_asa
-      # host: 192.168.89.114
-      host: 192.168.89.115
+      # host: 192.168.89.111
+      host: 192.168.80.115
       username: aaa
       fast_cli: False
       # password: aaa
       enable_required: True
   fw_b:
     name: asa2
-    role: fw
+    device_function: fw
     connection:
       device_type: cisco_asa
       # host: 192.168.89.114
-      host: 192.168.89.115
+      host: 192.168.80.115
       username: aaa
       fast_cli: False
       # password: aaa
       enable_required: True
-  # fw_a:
-  #   name: asa1
-  #   role: active
-  #   connection:
-  #     host: 192.168.88.111
-  #     auth_username: aaa
-  #     auth_password: aaa
-  #     auth_secondary: aaa
-  #     platform: cisco_asa
-  #     auth_strict_key: False
-  #     transport: ssh2
-  #     transport_options: 
-  #       open_cmd:
-  #         - '-o'
-  #         - KexAlgorithms=+diffie-hellman-group1-sha1
-  # fw_b:
-  #   name: asa2
-  #   role: standby
-  #   connection:
-  #     host: 192.168.88.114
-  #     auth_username: aaa
-  #     auth_password: aaa
-  #     auth_secondary: aaa
-  #     platform: cisco_asa
-  #     auth_strict_key: False
-  #     transport: ssh2
-  #     transport_options: 
-  #       open_cmd:
-  #         - '-o'
-  #         - KexAlgorithms=+diffie-hellman-group1-sha1
+  router1:
+    name: asa1
+    device_function: router
+    connection:
+      device_type: cisco_asa
+      # host: 192.168.89.114
+      host: 192.168.80.115
+      username: aaa
+      fast_cli: False
+      # password: aaa
+      enable_required: True
+    
