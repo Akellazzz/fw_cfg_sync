@@ -69,9 +69,9 @@ def load_inventory(file):
     # print(cfg["prerequisites"])
     # print(cfg["devices"])
     return Config(prerequisites=cfg.get("prerequisites"), 
-    devices=cfg.get("devices"), 
-    contexts_role_check = cfg.get("contexts_role_check"),
-    multicontext = cfg.get("multicontext"))
+        devices=cfg.get("devices"), 
+        contexts_role_check = cfg.get("contexts_role_check"),
+        multicontext = cfg.get("multicontext"))
 
 
 def load_mail_config(file):

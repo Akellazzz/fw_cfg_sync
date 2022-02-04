@@ -2,28 +2,57 @@ multicontext: True
 prerequisites:
   check_description: False
   description: 
-  check_route: False
-  route: 1.1.1.1 255.255.255.0
+  check_route: True
+  # route: 1.1.1.1 255.255.255.0
+contexts_role_check:
+  test1:
+    device: asa1
+    command: show route
+    # find_string: 0.0.0.0
+    is_active: 0.0.0.0
+    is_reserve: 1.1.1.1
+    # site: active
+    # site: reserve
+  test2:
+    device: asa1
+    command: show route
+    # find_string: 0.0.0.0
+    is_active: 0.0.0.0
+    is_reserve: 1.1.1.1
+    # site: active
+    # site: reserve
 devices:
-  # fw_a:
-  #   name: asa1
-  #   role: fw
-  #   connection:
-  #     device_type: cisco_asa
-  #     # host: 192.168.89.111
-  #     host: 192.168.89.115
-  #     username: aaa
-  #     # password: aaa
-  #     enable_required: True
+  fw_a:
+    name: asa1
+    device_function: fw
+    connection:
+      device_type: cisco_asa
+      # host: 192.168.89.111
+      host: 192.168.80.115
+      username: aaa
+      fast_cli: False
+      # password: aaa
+      enable_required: True
   fw_b:
     name: asa2
-    role: fw
+    device_function: fw
     connection:
       device_type: cisco_asa
       # host: 192.168.89.114
-      host: 192.168.89.115
+      host: 192.168.80.115
       username: aaa
-      fast_cli: True
+      fast_cli: False
+      # password: aaa
+      enable_required: True
+  router1:
+    name: asa1
+    device_function: router
+    connection:
+      device_type: cisco_asa
+      # host: 192.168.89.114
+      host: 192.168.80.115
+      username: aaa
+      fast_cli: False
       # password: aaa
       enable_required: True
     

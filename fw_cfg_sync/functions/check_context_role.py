@@ -29,19 +29,21 @@ def check_context_role(environment, app_config, firewalls, routers, inv):
             for router in routers:
                 if inv.contexts_role_check[context]['device'] == router.name:
 
+                    active_sign = inv.contexts_role_check[context].get('is_active')
+                    reserve_sign = inv.contexts_role_check[context].get('is_reserve')
+
                     cmd = inv.contexts_role_check[context]['command']
-                    find_string = inv.contexts_role_check[context]['find_string']
-                    site = inv.contexts_role_check[context]['site']
-                    
-                    if find_string in router.send_command(cmd):
-                        if site == "active":
+                    response = router.send_command(cmd)
+
+                    if active_sign in response or reserve_sign in response:
+                        if active_sign in response:
                             firewalls[0].contexts[context] = {"role": "active"}
                             firewalls[1].contexts[context] = {"role": "reserve"}
-                        elif site == "reserve":
+                        if reserve_sign in response:
                             firewalls[0].contexts[context] = {"role": "reserve"}
                             firewalls[1].contexts[context] = {"role": "active"}
                     else:
-                        error = f"На {router.name} в выводе команды {cmd} не найдено '{find_string}'"
+                        error = f"Не удалось определить роли контекста {context}. На {router.name} в выводе команды {cmd} не найдено '{active_sign}' или '{reserve_sign}'"
                         return firewalls, error
 
         return firewalls, error

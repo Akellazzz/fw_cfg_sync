@@ -102,7 +102,7 @@ class Multicontext(BaseConnection):
         for line in lines:
             line = line.strip()
             if not line.startswith("*"):
-                context = line.split()[0]
+                context = line.split()[0].lower()
                 contexts.append(context)
         if contexts:
             logger.info(f"Сформирован список контекстов {self.name}: {contexts}")
