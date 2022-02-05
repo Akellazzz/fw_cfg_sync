@@ -98,7 +98,7 @@ def create_diff_files(firewalls, datetime_now) -> set:
                 backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
                 role = fw.contexts[context]["role"]
                 delta = fw.contexts[context]["delta"]
-                delta_filename = (f'{fw.name}_{context}_{datetime_now}_{fw.contexts[context]["role"]}_delta.txt')
+                delta_filename = (f'{fw.name}-{context}_{datetime_now}_{fw.contexts[context]["role"]}_delta.txt')
                 delta_fullpath = os.path.join(backup_dir, fw.name, delta_filename)
 
                 with open(delta_fullpath, "w") as f:

@@ -149,7 +149,7 @@ class Multicontext(BaseConnection):
 
         # d = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # dirname = os.path.join(os.path.dirname(__file__), "fw_configs")
-        filename = f'{self.name}' + "_" + context + "_" + datetime_now + ".txt"
+        filename = f'{self.name}' + "-" + context + "_" + datetime_now + ".txt"
         # full_path = os.path.join(dirname, filename)
         # main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
 
