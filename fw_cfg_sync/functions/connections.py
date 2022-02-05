@@ -26,18 +26,26 @@ class BaseConnection:
     """Базовый класс"""
 
     # def __init__(self, **kwargs):
-    def __init__(self, name, host, username, fast_cli, enable_required, device_type, device_function):
+    # def __init__(self, name, host, username, fast_cli, enable_required, device_type, device_function):
+    def __init__(self, name, host, credentials, fast_cli, enable_required, device_type, device_function):
         # self.__dict__.update(kwargs)
         self.conn = {}
         self.name = name
         self.device_function = device_function
         self.conn["host"] = host
         self.conn["device_type"] = device_type
-        self.conn["username"] = username
+        self.conn["username"] = keyring.get_credential(credentials, '').username
         self.conn["fast_cli"] = fast_cli
-        self.conn["password"] = keyring.get_password(name, username)
+        self.conn["password"] = keyring.get_credential(credentials, '').password
         if enable_required:
-            self.conn["secret"] = keyring.get_password(name, "secret")
+            enable = keyring.get_credential(credentials + "_enable", '')
+            if enable:
+                self.conn["secret"] = enable.password
+            else:
+                logger.error(
+                    f"enable password for {self.name} not found in saved system credentials: {credentials}_enable"
+                )
+                sys.exit()
         self.conn["allow_auto_change"] = False
 
         self.is_reachable: bool

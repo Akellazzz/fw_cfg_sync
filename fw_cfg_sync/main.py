@@ -45,7 +45,7 @@ def get_devices_by_function(inv, device_function: str) -> tuple:
     for device in inv.devices:
         kwargs = {'name': inv.devices[device].get("name"),
             'host': inv.devices[device]["connection"]["host"],
-            'username': inv.devices[device]["connection"]["username"],
+            'credentials': inv.devices[device]["connection"]["credentials"],
             'device_type': inv.devices[device]["connection"]["device_type"],
             'device_function': inv.devices[device]["device_function"],
             'fast_cli': inv.devices[device]["connection"]["fast_cli"],
