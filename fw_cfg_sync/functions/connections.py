@@ -138,7 +138,7 @@ class Multicontext(BaseConnection):
             # self.contexts[context] = {"config": result}
             self.contexts[context]["config"] = result
             logger.info(
-                f"С контекста {self.name}: {context} успешно считана конфигурация"
+                f"С контекста {self.name}-{context} успешно считана конфигурация"
             )
 
         else:
@@ -169,5 +169,5 @@ class Multicontext(BaseConnection):
         with open(full_path, "w") as f:
             f.write(self.contexts[context]["config"])
             logger.info(
-                f"Конфигурация контекста {self.name}: {context} сохранена в файл {full_path}"
+                f"Конфигурация контекста {self.name}-{context} сохранена в файл {full_path}"
             )

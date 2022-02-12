@@ -187,7 +187,7 @@ def main():
 
     #     for context in fw.contexts:
     #              mail_text += f'{msg}<br>'
-   
+    mail_config.subject = f'Отчет о синхронизации конфигураций {firewalls[0].name} и {firewalls[1].name}'
     send_mail(mail_text, files=attached_files, **mail_config.dict())
     pass
 
