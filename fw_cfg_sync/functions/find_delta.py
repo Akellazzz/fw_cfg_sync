@@ -52,7 +52,7 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
 
     Returns
     -------
-    Два кортежа с уникальными для МСЭ 1 и МСЭ 2 командами
+    Дельты для МСЭ 1 и МСЭ 2 
 
     """
     file1_result = ""
