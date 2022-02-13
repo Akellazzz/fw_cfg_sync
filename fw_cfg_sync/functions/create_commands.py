@@ -38,7 +38,11 @@ access-list res_only extended deny ip object-group og0 host 8.8.8.8
 !""".splitlines()
 
 
-def active_only_commands(active_delta, reserve_delta):
+def active_only_commands(active_delta: list, reserve_delta: list) -> list:
+    ''' Ищет блоки конфигурации, которые есть только в активном контексте
+    
+    Возвращает список команд
+    '''
     commands = []
     parser_config = get_parser_config()
     for i in parser_config:    
@@ -52,18 +56,17 @@ def active_only_commands(active_delta, reserve_delta):
             act_parent = act_parent_and_children.text
             if act_parent_and_children.ioscfg and act_parent not in res_parents:
                 # если в активном контексте есть блоки с parent, которых нет на резервном, добавляет их в конфиг вместе с children
-                # commands.append(act_parent_and_children.ioscfg)
                 commands += act_parent_and_children.ioscfg
-    # result = []
-    # for list_ in commands:
-    #     result = 
     if commands:
         commands.append('!')
     return commands
 
 
-def negated_reserve_only_commands(active_delta, reserve_delta):
-
+def negated_reserve_only_commands(active_delta: list, reserve_delta: list) -> list:
+    ''' Ищет блоки конфигурации, которые есть только в резервном контексте
+    
+    Возвращает список команд, удаляющий эти блоки
+    '''
     negate_commands = []
     parser_config = get_parser_config()
     for i in parser_config:    
@@ -82,6 +85,8 @@ def negated_reserve_only_commands(active_delta, reserve_delta):
         if block_negate_commands:
             negate_commands.append(block_negate_commands)
     # print(negate_commands)
+
+    # реверс списка, чтобы access-list удалялись перед используемыми ими object-group и т. п.
     negate_commands.reverse()
 
     result = []
@@ -93,7 +98,31 @@ def negated_reserve_only_commands(active_delta, reserve_delta):
 
     return result 
 
-def intersection(active_delta, reserve_delta):
+def intersection(active_delta: list, reserve_delta: list) -> list:
+    ''' Ищет в активном и резервном контекстах блоки конфигурации, в которых есть одинаковый parent
+    
+    Возвращает список команд, который переносит в parent недостающие команды и удаляет лишние.
+    
+    active:
+    !
+    object-group protocol obj_prot0
+     description test_og_prot
+     protocol-object icmp
+    !
+
+    reserve:
+    !
+    object-group protocol obj_prot0
+     description test_og_prot
+     protocol-object udp
+    !
+
+    result:
+    ['object-group protocol obj_prot0', ' no protocol-object udp', 'object-group protocol obj_prot0', ' protocol-object icmp', '!']   
+
+    В результате лишний раз вызывается object-group protocol obj_prot0 - так делает sync_diff
+    http://pennington.net/tutorial/ciscoconfparse/ccp_tutorial.html#slide14  
+    '''
     commands = []
     parser_config = get_parser_config()
     for i in parser_config:    

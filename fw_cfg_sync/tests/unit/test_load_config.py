@@ -27,10 +27,10 @@ def test_Multicontext():
         devices.append(
             Multicontext(
                 name=inv.devices[device].get("name"),
-                device_function=inv.devices[device].get("device_function"),
                 host=inv.devices[device]["connection"]["host"],
-                username=inv.devices[device]["connection"]["username"],
+                credentials=inv.devices[device]["connection"]["credentials"],
                 device_type=inv.devices[device]["connection"]["device_type"],
+                device_function=inv.devices[device].get("device_function"),
                 fast_cli=inv.devices[device]["connection"]["fast_cli"],
                 enable_required=inv.devices[device]["connection"]["enable_required"],
             )
