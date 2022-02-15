@@ -39,9 +39,9 @@ def test_intersection_check_only():
     assert 'object-group protocol res_only' not in intersection(active_delta, reserve_delta)
 
 def test_intersection2():
-    assert intersection(active_delta, reserve_delta) == ['object-group protocol obj_prot0', ' no protocol-object udp', 'object-group protocol obj_prot0', ' protocol-object icmp', '!']
+    assert intersection(active_delta, reserve_delta) == ['object-group protocol obj_prot0', ' no protocol-object udp', ' protocol-object icmp', '!']
 
 def test_intersection3():
     print(intersection(active_delta, reserve_delta))
-    assert intersection(active_delta, reserve_delta) == ['object-group protocol obj_prot0', ' no protocol-object udp', 'object-group protocol obj_prot0', ' protocol-object icmp', '!']
+    assert intersection(active_delta, reserve_delta) == ['object-group protocol obj_prot0', ' no protocol-object udp', ' protocol-object icmp', '!']
 

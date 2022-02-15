@@ -127,7 +127,8 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
     parser_config = get_parser_config()
     for i in parser_config:    
         template = parser_config[i].get("template")
-
+        if parser_config[i].get("action") not in ['prepare', 'change']:
+            continue
         act_blocks = block_parser(CiscoConfParse(active_delta), template)
         res_blocks = block_parser(CiscoConfParse(reserve_delta), template)
 
@@ -149,7 +150,20 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
 
                     intersection = res_block_parse.sync_diff(act_block.ioscfg, '')
                     if intersection:
-                        commands += intersection
+
+                        if len(intersection) > 2:
+                            cmd_tmp_list = [intersection[0]] # parent
+                            for cmd in intersection[1::]:
+                                if cmd in cmd_tmp_list:
+                                    continue
+                                else:
+                                    cmd_tmp_list.append(cmd)
+                                # elif cmd.strip().startswith('no '):
+
+
+                            commands += cmd_tmp_list
+                        else:
+                            commands += intersection
     if commands:
         commands.append('!')
 
@@ -169,6 +183,7 @@ if __name__ == '__main__':
 object-group protocol obj_prot0
  description test_og_prot
  protocol-object icmp
+ protocol-object tcp
 !
 object-group protocol act_only
  description test_og_prot
@@ -182,6 +197,7 @@ object-group protocol res_only
 object-group protocol obj_prot0
  description test_og_prot
  protocol-object udp
+ protocol-object tcp
 !""".splitlines()
 
 
