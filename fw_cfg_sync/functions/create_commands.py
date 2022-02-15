@@ -136,11 +136,14 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
         for block in act_blocks:
             active_block_commands_list += block.ioscfg 
 
-        for block in act_blocks:
-            act_parent = block.text
-            if act_parent in res_parents:
+        for act_block in act_blocks:
+            act_parent = act_block.text
+            if act_block in res_blocks:
+                continue
+            elif act_parent in res_parents:
                 res_index = res_parents.index(act_parent)
                 res_block = res_blocks[res_index]
+                act_block_parse = CiscoConfParse(act_block.ioscfg, template)
                 res_block_parse = CiscoConfParse(res_block.ioscfg, template)
                 intersection = res_block_parse.sync_diff(active_block_commands_list, '')
                 if intersection:
@@ -159,5 +162,6 @@ def create_commands(active_delta, reserve_delta):
     return commands + no_commands + atomic_changes
 
 if __name__ == '__main__':
+    intersection(active_delta, active_delta)
     commands = create_commands(active_delta, reserve_delta)
     print("\n".join(commands))
