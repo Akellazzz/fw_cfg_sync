@@ -46,6 +46,8 @@ def active_only_commands(active_delta: list, reserve_delta: list) -> list:
     commands = []
     parser_config = get_parser_config()
     for i in parser_config:    
+        if i == 'access-list': # пропуск, т. к. важен порядок ACL
+            continue
         template = parser_config[i].get("template")
         act_blocks = block_parser(CiscoConfParse(active_delta), template)
         res_blocks = block_parser(CiscoConfParse(reserve_delta), template)
@@ -70,6 +72,8 @@ def negated_reserve_only_commands(active_delta: list, reserve_delta: list) -> li
     negate_commands = []
     parser_config = get_parser_config()
     for i in parser_config:    
+        if i == 'access-list': # пропуск, т. к. важен порядок ACL
+            continue
         block_negate_commands = []
         template = parser_config[i].get("template")
         act_blocks = block_parser(CiscoConfParse(active_delta), template)
@@ -86,7 +90,7 @@ def negated_reserve_only_commands(active_delta: list, reserve_delta: list) -> li
             negate_commands.append(block_negate_commands)
     # print(negate_commands)
 
-    # реверс списка, чтобы access-list удалялись перед используемыми ими object-group и т. п.
+    # реверс списка, чтобы удаление проходило в правильном порядке
     negate_commands.reverse()
 
     result = []
@@ -118,14 +122,14 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
     !
 
     result:
-    ['object-group protocol obj_prot0', ' no protocol-object udp', 'object-group protocol obj_prot0', ' protocol-object icmp', '!']   
+    ['object-group protocol obj_prot0', ' no protocol-object udp', ' protocol-object icmp', '!']   
 
-    В результате лишний раз вызывается object-group protocol obj_prot0 - так делает sync_diff
-    http://pennington.net/tutorial/ciscoconfparse/ccp_tutorial.html#slide14  
     '''
     commands = []
     parser_config = get_parser_config()
     for i in parser_config:    
+        if i == 'access-list': # пропуск, т. к. важен порядок ACL
+            continue
         template = parser_config[i].get("template")
         if parser_config[i].get("action") not in ['prepare', 'change']:
             continue
@@ -167,6 +171,32 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
     if commands:
         commands.append('!')
 
+    return commands
+
+
+def get_acl(config: list) -> dict:
+    ''' формирует словарь вида {имя_ACL: [список строк ACL]} '''
+    result = {}
+    for line in config:
+        if line.strip().startswith('access-list '):
+            name = line.split()[1]
+            if result.get(name):
+                result[name].append(line)
+            else:
+                result[name] = [line]
+    return result
+
+
+
+def create_acl(active_config: list, active_delta: list) -> list:
+    ''' выбирает из дельты ACL и формирует список команд access-list для отправки на резервный МСЭ 
+    '''
+    commands = []
+    all_acl_dict = get_acl(active_config)
+    delta_acl_names = list(get_acl(active_delta).keys())
+    for name in delta_acl_names:    
+            commands.append(f'clear configure access-list {name}')
+            commands += all_acl_dict[name]
     return commands
 
 
