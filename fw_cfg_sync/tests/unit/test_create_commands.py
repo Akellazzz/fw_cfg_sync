@@ -36,8 +36,11 @@ access-list acl_og0 extended deny ip object-group og0 host 8.8.8.8
 !""".splitlines()
 
 
+def test_intersection_of_equal_lists():
+    assert not intersection(active_delta, active_delta)
+
 def test_intersection():
-    pprint(intersection(active_delta, active_delta))
     print('\n')
-    # print(intersection(active_delta, reserve_delta))
+    print(intersection(active_delta, reserve_delta))
+    assert intersection(active_delta, reserve_delta)
 
