@@ -139,15 +139,15 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
         for act_block in act_blocks:
             act_parent = act_block.text
             if act_parent in res_parents:
-                res_index = res_parents.index(act_parent)
-                res_block = res_blocks[res_index]
+                index = res_parents.index(act_parent)
+                res_block = res_blocks[index]
                 act_block_parse = CiscoConfParse(act_block.ioscfg, template)
                 res_block_parse = CiscoConfParse(res_block.ioscfg, template)
                 if act_block_parse.ioscfg == res_block_parse.ioscfg:
                     continue
                 else:
 
-                    intersection = res_block_parse.sync_diff(active_block_commands_list, '')
+                    intersection = res_block_parse.sync_diff(act_block.ioscfg, '')
                     if intersection:
                         commands += intersection
     if commands:
@@ -164,6 +164,27 @@ def create_commands(active_delta, reserve_delta):
     return commands + no_commands + atomic_changes
 
 if __name__ == '__main__':
-    print(intersection(active_delta, active_delta))
-    commands = create_commands(active_delta, reserve_delta)
+
+    active_delta = """!
+object-group protocol obj_prot0
+ description test_og_prot
+ protocol-object icmp
+!
+object-group protocol act_only
+ description test_og_prot
+!""".splitlines()
+
+
+    reserve_delta = """!
+object-group protocol res_only
+ description test_og_prot
+!
+object-group protocol obj_prot0
+ description test_og_prot
+ protocol-object udp
+!""".splitlines()
+
+
+    pprint(intersection(active_delta, reserve_delta))
+    # commands = create_commands(active_delta, reserve_delta)
     # print("\n".join(commands))

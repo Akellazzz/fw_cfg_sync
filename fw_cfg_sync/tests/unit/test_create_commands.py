@@ -14,33 +14,34 @@ object-group protocol obj_prot0
  description test_og_prot
  protocol-object icmp
 !
-object-group protocol obj_prot1
+object-group protocol act_only
  description test_og_prot
- protocol-object icmp
-!
-access-list act_only extended deny ip object-group og0 host 8.8.8.8 
-access-list acl_og0 extended deny ip object-group og0 host 8.8.8.8 
 !""".splitlines()
-
-reserve_delta = """!
-object-group protocol obj_prot0
- description test_og_prot
- protocol-object udp
-!
-object-group protocol res_only
- description test_og_prot
- protocol-object udp
-!
-access-list res_only extended deny ip object-group og0 host 8.8.8.8 
-access-list acl_og0 extended deny ip object-group og0 host 8.8.8.8 
-!""".splitlines()
-
 
 def test_intersection_of_equal_lists():
     assert not intersection(active_delta, active_delta)
 
+reserve_delta = """!
+object-group protocol res_only
+ description test_og_prot
+!
+object-group protocol obj_prot0
+ description test_og_prot
+ protocol-object udp
+!""".splitlines()
+
+
 def test_intersection():
-    print('\n')
-    print(intersection(active_delta, reserve_delta))
     assert intersection(active_delta, reserve_delta)
+
+def test_intersection_check_only():
+    assert 'object-group protocol act_only' not in intersection(active_delta, reserve_delta)
+    assert 'object-group protocol res_only' not in intersection(active_delta, reserve_delta)
+
+def test_intersection2():
+    assert intersection(active_delta, reserve_delta) == ['object-group protocol obj_prot0', ' no protocol-object udp', 'object-group protocol obj_prot0', ' protocol-object icmp', '!']
+
+def test_intersection3():
+    print(intersection(active_delta, reserve_delta))
+    assert intersection(active_delta, reserve_delta) == ['object-group protocol obj_prot0', ' no protocol-object udp', 'object-group protocol obj_prot0', ' protocol-object icmp', '!']
 
