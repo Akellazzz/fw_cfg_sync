@@ -64,7 +64,7 @@ def active_only_commands(active_delta: list, reserve_delta: list) -> list:
     return commands
 
 
-def negated_reserve_only_commands(active_delta: list, reserve_delta: list) -> list:
+def negate_reserve_only_commands(active_delta: list, reserve_delta: list) -> list:
     ''' Ищет блоки конфигурации, которые есть только в резервном контексте
     
     Возвращает список команд, удаляющий эти блоки
@@ -72,8 +72,6 @@ def negated_reserve_only_commands(active_delta: list, reserve_delta: list) -> li
     negate_commands = []
     parser_config = get_parser_config()
     for i in parser_config:    
-        if i == 'access-list': # пропуск, т. к. важен порядок ACL
-            continue
         block_negate_commands = []
         template = parser_config[i].get("template")
         act_blocks = block_parser(CiscoConfParse(active_delta), template)
@@ -130,9 +128,9 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
     for i in parser_config:    
         if i == 'access-list': # пропуск, т. к. важен порядок ACL
             continue
-        template = parser_config[i].get("template")
         if parser_config[i].get("action") not in ['prepare', 'change']:
             continue
+        template = parser_config[i].get("template")
         act_blocks = block_parser(CiscoConfParse(active_delta), template)
         res_blocks = block_parser(CiscoConfParse(reserve_delta), template)
 
@@ -202,7 +200,7 @@ def create_acl(active_config: list, active_delta: list) -> list:
 
 def create_commands(active_delta, reserve_delta):
     commands = active_only_commands(active_delta, reserve_delta)
-    no_commands = negated_reserve_only_commands(active_delta, reserve_delta)
+    no_commands = negate_reserve_only_commands(active_delta, reserve_delta)
     atomic_changes = intersection(active_delta, reserve_delta)
     
     return commands + no_commands + atomic_changes
