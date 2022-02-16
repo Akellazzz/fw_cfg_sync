@@ -64,3 +64,20 @@ def test_get_acl():
 def test_create_acl():
     commands = create_acl(config, ['access-list test extended permit ip any any time-range tr1 '])
     assert commands == ['clear configure access-list test', 'access-list test extended permit ip any any time-range tr1 ', 'access-list test extended permit ip any any time-range tr49 ']
+
+
+config2 = """access-list test extended permit ip any any time-range tr1
+access-list test extended permit ip any any time-range tr49
+access-list acl_og0 extended deny ip object-group og0 host 8.8.8.81
+access-list acl_og0 extended deny ip object-group og1 host 8.8.8.82
+access-list acl_og0 extended deny ip object-group og2 host 8.8.8.83
+access-list acl_og0 extended deny ip object-group og3 host 8.8.8.84
+""".splitlines()
+
+def test_create_acl2():
+    commands = create_acl(config, ['access-list test extended permit ip any any time-range tr1', 'access-list acl_og0 extended deny ip object-group og2 host 8.8.8.83'])
+    assert 'clear configure access-list test' in commands
+    assert 'clear configure access-list acl_og0' in commands
+    # print(commands)
+    assert commands == ['clear configure access-list test', 'access-list test extended permit ip any any time-range tr1 ', 'access-list test extended permit ip any any time-range tr49 ', 'clear configure access-list acl_og0', 'access-list acl_og0 extended deny ip object-group og0 host 8.8.8.8 ']
+

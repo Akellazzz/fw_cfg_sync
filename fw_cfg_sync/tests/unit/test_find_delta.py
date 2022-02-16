@@ -56,11 +56,11 @@ def test_acl_order():
     first = "access-list test extended permit ip any any time-range tr49"
     second = "access-list test extended permit icmp any any time-range tr49"
     third = "access-list acl_og0 extended deny ip object-group og0 host 8.8.8.8"
-    breakpoint()
+    # breakpoint()
     assert acl.index(first) < acl.index(second) < acl.index(third)
 
 
-def test_acl_order():
+def test_acl_order2():
     """
     Сравнение
     """
