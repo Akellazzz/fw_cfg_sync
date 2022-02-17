@@ -4,9 +4,9 @@ import sys
 import pytest
 from pprint import pprint
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." / "functions"))
+sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".."))
 # print(str(Path(__file__) / ".." / ".." / ".." / "functions"))
-from ...functions.create_commands import create_acl_changes, get_acl, acls_to_be_removed
+from functions.create_commands import create_acl_changes, get_acl, acls_to_be_removed
 
 def test_create_acl_changes1():
     # когда в ACL одна строка и она отличается, нужно сначала добавить вторую, а потом удалить первую
@@ -46,8 +46,8 @@ object-group network res_only
 """.splitlines()
 
     commands = create_acl_changes(active_config, reserve_config, active_delta, reserve_delta)
-    # print(commands)
-    assert commands == ['access-list both_with_diff extended permit ip any any time-range act_diffffffff', 'no access-list both_with_diff extended permit ip any any time-range res_diffffffff']
+    pprint(commands)
+    assert commands == ['access-list both_with_diff deny icmp host 1.1.1.1 host 1.1.1.1', 'no access-list both_with_diff extended permit ip any any time-range res_diffffffff', 'access-list both_with_diff extended permit ip any any time-range act_diffffffff', 'no access-list both_with_diff deny icmp host 1.1.1.1 host 1.1.1.1']
     # print('\n'.join(commands))
 
 
@@ -77,7 +77,6 @@ access-list both extended permit ip any any time-range e
 """.splitlines()
 
     commands = create_acl_changes(active_config, reserve_config, active_delta, reserve_delta)
-    print(commands)
     assert commands == ['no access-list both extended permit ip any any time-range d', 'no access-list both extended permit ip any any time-range e']
     # print('\n'.join(commands))
 

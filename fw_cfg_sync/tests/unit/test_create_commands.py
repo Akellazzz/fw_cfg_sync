@@ -4,44 +4,62 @@ import sys
 import pytest
 from pprint import pprint
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." ))
 sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." / "functions"))
 # print(str(Path(__file__) / ".." / ".." / ".." / "functions"))
 # from ...functions.create_commands import intersection, get_acl, create_acl, create_commands, acls_to_be_removed, acls_to_be_created, create_acl_changes
-from ...functions.create_commands import intersection, get_acl, create_commands, acls_to_be_removed, acls_to_be_created
+from functions.create_commands import intersection, create_commands
 
-active_delta = """!
-object-group protocol obj_prot0
+active = """object-group protocol obj_prot0
  description test_og_prot
  protocol-object icmp
 !
 object-group protocol act_only
  description test_og_prot
-!""".splitlines()
+""".splitlines()
 
+active_delta = """object-group protocol obj_prot0
+ description test_og_prot
+ protocol-object icmp
+!
+object-group protocol act_only
+ description test_og_prot
+""".splitlines()
 
-reserve_delta = """!
-object-group protocol res_only
+reserve = """object-group protocol res_only
  description test_og_prot
 !
 object-group protocol obj_prot0
  description test_og_prot
  protocol-object udp
-!""".splitlines()
+""".splitlines()
+
+reserve_delta = """object-group protocol res_only
+ description test_og_prot
+!
+object-group protocol obj_prot0
+ description test_og_prot
+ protocol-object udp
+""".splitlines()
 
 def test_intersection_of_equal_lists():
-    assert not intersection(active_delta, active_delta)
+
+    assert not intersection(active, active, [], [])
 
 
 
 def test_intersection():
-    assert intersection(active_delta, reserve_delta)
+    assert intersection(active, reserve, active_delta, reserve_delta)
 
 def test_intersection_check_only():
-    assert 'object-group protocol act_only' not in intersection(active_delta, reserve_delta)
-    assert 'object-group protocol res_only' not in intersection(active_delta, reserve_delta)
+    assert 'object-group protocol act_only' not in intersection(active, reserve, active_delta, reserve_delta)
+    assert 'object-group protocol res_only' not in intersection(active, reserve, active_delta, reserve_delta)
 
 def test_intersection2():
-    assert intersection(active_delta, reserve_delta) == ['object-group protocol obj_prot0', ' protocol-object icmp', ' no protocol-object udp']
+    result = intersection(active, reserve, active_delta, reserve_delta)
+    # print(result)
+    # breakpoint()
+    # assert  == ['object-group protocol obj_prot0', ' protocol-object icmp', ' no protocol-object udp']
 
 
 def test_intersection3():
@@ -58,30 +76,23 @@ object-group network og10
  network-object host 1.1.1.1
  network-object 10.1.1.0 255.255.255.0""".splitlines()
 
-    commands = intersection(active, reserve)
-    assert commands == ['object-group network og10', ' network-object host 1.1.1.2', ' network-object host 1.1.1.3', ' network-object host 1.1.1.4']
-
-def test_intersection4():
-
-    active = """!
-object-group network og0
- network-object host 1.1.1.111
- network-object host 1.1.1.3
- """.splitlines()
-
-    reserve = """!
-object-group network og0
+    active_delta = """!
+object-group network og10
  network-object host 1.1.1.1
  network-object host 1.1.1.2
  network-object host 1.1.1.3
  network-object host 1.1.1.4
- network-object 10.1.1.0 255.255.255.0
- """.splitlines()
+ network-object 10.1.1.0 255.255.255.0""".splitlines()
 
+    reserve_delta = """!
+object-group network og10
+ network-object host 1.1.1.1
+ network-object 10.1.1.0 255.255.255.0""".splitlines()
 
-    commands = intersection(active, reserve)
-    # print(commands)
-    assert commands == ['object-group network og0', ' network-object host 1.1.1.111', ' no network-object host 1.1.1.1', ' no network-object host 1.1.1.2', ' no network-object host 1.1.1.4', ' no network-object 10.1.1.0 255.255.255.0']
+    commands = intersection(active, reserve, active_delta, reserve_delta)
+    print(commands)
+
+    assert commands == ['object-group network og10', ' network-object host 1.1.1.2', ' network-object host 1.1.1.3', ' network-object host 1.1.1.4']
 
 def test_create_commands():
     act_backup = """!

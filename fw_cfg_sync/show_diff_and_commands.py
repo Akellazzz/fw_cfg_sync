@@ -1,3 +1,9 @@
+""" Сравнение двух конфигураций Cisco ASA
+
+Пример: 
+
+show_diff_and_commands.py -act tests\fw_configs_for_tests\active_cfg_file.txt -res tests\fw_configs_for_tests\active_cfg_file_changed.txt
+"""
 from argparse import ArgumentParser, RawTextHelpFormatter
 from pprint import pprint
 
@@ -21,27 +27,47 @@ def getargs():
         action="store_true",
     )
     parser.add_argument(
-        "-f1",
-        dest="file1",
-        type=str,
-        help="файл с конфигурацией для сравнения",
-        required=True,
-    )
-    parser.add_argument(
-        "-f2",
-        dest="file2",
-        type=str,
-        help="файл с конфигурацией для сравнения",
-        required=True,
-    )
-    parser.add_argument(
         "-act",
         dest="act_backup",
         type=str,
         help="бэкап активного контекста",
         required=True,
     )
+    parser.add_argument(
+        "-res",
+        dest="res_backup",
+        type=str,
+        help="бэкап резервного контекста",
+        required=True,
+    )
     return parser.parse_args()
+
+
+def show_diff_and_commands(act_backup, res_backup):
+    uniq_in_act_backup, uniq_in_res_backup = find_delta(act_backup, res_backup)
+
+
+    if uniq_in_act_backup:
+        print(f"\nКоманды только в {act_backup}:\n")
+        print(f"{uniq_in_act_backup}")
+    else:
+        print(f"В файле {act_backup} нет уникальных команд")
+    if uniq_in_res_backup:
+        print(f"\nКоманды только в {res_backup}:\n")
+        print(f"{uniq_in_res_backup}")
+    else:
+        print(f"В файле {res_backup} нет уникальных команд")
+    if uniq_in_act_backup or uniq_in_res_backup:
+        with open(act_backup) as act:
+            act_config_list = act.readlines()
+            act_config_list = [i.strip() for i in act_config_list]
+        with open(res_backup) as res:
+            res_config_list = res.readlines()
+            res_config_list = [i.strip() for i in res_config_list]
+        print(f"Команды для резервного контекста:")
+        commands = create_commands(act_config_list, res_config_list, uniq_in_act_backup.splitlines(), uniq_in_res_backup.splitlines())
+        pprint(commands)
+    return uniq_in_act_backup, uniq_in_res_backup, commands
 
 
 def main():
@@ -52,25 +78,9 @@ def main():
     else:
         logger.add(sys.stdout, format="{message}", level="INFO")
 
-    file1 = args.file1
-    file2 = args.file2
     act_backup = args.act_backup
-    uniq_in_file1, uniq_in_file2 = find_delta(file1, file2)
-
-    if uniq_in_file1:
-        print(f"\nКоманды только в {file1}:\n")
-        print(f"{uniq_in_file1}")
-    else:
-        print(f"В файле {file1} нет уникальных команд")
-    if uniq_in_file2:
-        print(f"\nКоманды только в {file2}:\n")
-        print(f"{uniq_in_file2}")
-    else:
-        print(f"В файле {file2} нет уникальных команд")
-    if uniq_in_file1 or uniq_in_file2:
-        print(f"Если file1 брать за эталон, то для file2 команды:")
-
-        pprint(create_commands(act_backup.splitlines(), uniq_in_file1.splitlines(), uniq_in_file2.splitlines()))
+    res_backup = args.res_backup
+    show_diff_and_commands(act_backup, res_backup)
 
 if __name__ == "__main__":
     main()
