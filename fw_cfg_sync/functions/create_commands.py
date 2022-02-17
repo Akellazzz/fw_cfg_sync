@@ -1,7 +1,8 @@
 from ciscoconfparse import CiscoConfParse
 from loguru import logger
 from pprint import pprint
-from .find_delta import get_parser_config, block_parser, get_uniq
+# from .find_delta import get_parser_config, block_parser, get_uniq
+from find_delta import get_parser_config, block_parser, get_uniq
 import yaml
 import os
 
@@ -38,7 +39,7 @@ access-list res_only extended deny ip object-group og0 host 8.8.8.8
 !""".splitlines()
 
 
-def active_only_commands(active_delta: list, reserve_delta: list) -> list:
+def active_only_commands(active_config: list, reserve_config: list, active_delta: list, reserve_delta: list) -> list:
     ''' Ищет блоки конфигурации, которые есть только в активном контексте
     
     Возвращает список команд
@@ -47,7 +48,7 @@ def active_only_commands(active_delta: list, reserve_delta: list) -> list:
     parser_config = get_parser_config()
     for i in parser_config:    
         if i == 'access-list': 
-            commands += acls_to_be_created(active_delta, reserve_delta)
+            commands += acls_to_be_created(active_config, reserve_config, active_delta, reserve_delta)
         template = parser_config[i].get("template")
         act_blocks = block_parser(CiscoConfParse(active_delta), template)
         res_blocks = block_parser(CiscoConfParse(reserve_delta), template)
@@ -62,7 +63,7 @@ def active_only_commands(active_delta: list, reserve_delta: list) -> list:
     return commands
 
 
-def negate_reserve_only_commands(active_delta: list, reserve_delta: list) -> list:
+def negate_reserve_only_commands(active_config: list, reserve_config: list, active_delta: list, reserve_delta: list) -> list:
     ''' Ищет блоки конфигурации, которые есть только в резервном контексте
     
     Возвращает список команд, удаляющий эти блоки
@@ -71,7 +72,7 @@ def negate_reserve_only_commands(active_delta: list, reserve_delta: list) -> lis
     parser_config = get_parser_config()
     for i in parser_config:    
         if i == 'access-list': 
-            negate_commands += acls_to_be_removed(active_delta, reserve_delta)
+            negate_commands += acls_to_be_removed(active_config, reserve_config, active_delta, reserve_delta)
         block_negate_commands = []
         template = parser_config[i].get("template")
         act_blocks = block_parser(CiscoConfParse(active_delta), template)
@@ -180,92 +181,168 @@ def get_acl(config: list) -> dict:
 
 
 
-def create_acl(active_config: list, active_delta: list) -> list:
-    ''' выбирает из дельты ACL и формирует список команд access-list для отправки на резервный МСЭ 
-    '''
-    commands = []
-    all_acl_dict = get_acl(active_config)
-    delta_acl_names = list(get_acl(active_delta).keys())
-    for name in delta_acl_names:    
-            commands.append(f'clear configure access-list {name}')
-            commands += all_acl_dict[name]
-    return commands
+# def create_acl(active_config: list, active_delta: list) -> list:
+#     ''' выбирает из дельты ACL и формирует список команд access-list для отправки на резервный МСЭ 
+#     '''
+#     commands = []
+#     all_acl_dict = get_acl(active_config)
+#     delta_acl_names = list(get_acl(active_delta).keys())
+#     for name in delta_acl_names:    
+#             commands.append(f'clear configure access-list {name}')
+#             commands += all_acl_dict[name]
+#     return commands
 
 
-def acls_to_be_removed(active_delta: list, reserve_delta: list) -> list:
-    ''' формирует команды для удаления ACL, которые есть только на резервном контексте'''
+def acls_to_be_removed(active_config: list, reserve_config: list, active_delta: list, reserve_delta: list) -> list:
+    ''' формирует команды для удаления ACL, которые есть только на резервном контексте
+    TODO нужно проверять, что если есть имя в reserve_delta и нет в active_delta, то имени нет и в active_config
+    Если имя есть, то оно должно обрабатываться в create_acl_changes '''
 
     result = []
     act_delta_acl_names = set(get_acl(active_delta).keys())
     res_delta_acl_names = set(get_acl(reserve_delta).keys())
-    res_only_acl_names = res_delta_acl_names - act_delta_acl_names 
-    for name in res_only_acl_names:
-        for line in reserve_delta:
-            if line.strip().startswith(f'access-list {name} '):
-                result.append(f'no {line}')
+
+    all_delta_acl_names = act_delta_acl_names | res_delta_acl_names
+
+    all_acl_act_dict = get_acl(active_config)
+    all_acl_res_dict = get_acl(reserve_config)
+
+    for name in all_delta_acl_names:
+        if (name in res_delta_acl_names) and (name not in all_acl_act_dict.keys()):
+            # если ACL есть только на резервном контексте, их нужно удалить
+            del_acls = all_acl_res_dict.get(name)
+            # delete += [f'no {line}' for line in del_acls if line.strip().startswith(f'access-list {name} ')]
+            result += [f'no {line}' for line in del_acls if line.strip().startswith(f'access-list {name} ')]
+
     return result
 
 
-def acls_to_be_created(active_delta: list, reserve_delta: list) -> list:
+def acls_to_be_created(active_config: list, reserve_config: list, active_delta: list, reserve_delta: list) -> list:
     ''' формирует команды для создания ACL с именами, которые есть только на активном контексте'''
-    
     result = []
+
     act_delta_acl_names = set(get_acl(active_delta).keys())
     res_delta_acl_names = set(get_acl(reserve_delta).keys())
     act_only_acl_names = act_delta_acl_names - res_delta_acl_names
-    for name in act_only_acl_names:
-        for line in active_delta:
-            if line.strip().startswith(f'access-list {name} '):
-                result.append(line)
+    all_delta_acl_names = act_delta_acl_names | res_delta_acl_names
+
+    all_acl_act_dict = get_acl(active_config)
+    all_acl_res_dict = get_acl(reserve_config)
+
+    for name in all_delta_acl_names:
+        if (name in act_delta_acl_names) and (name not in all_acl_res_dict.keys()):
+            # если ACL есть только на активном контексте, то можно просто перенести его на резервный
+            # create += all_acl_act_dict.get(name)
+            result += all_acl_act_dict.get(name)
+    
     return result
 
 
-def get_acl_names_from_delta(active_delta: list, reserve_delta: list) -> tuple:
+# def get_acl_names_from_delta(active_delta: list, reserve_delta: list) -> tuple:
+#     act_delta_acl_names = set(get_acl(active_delta).keys())
+#     res_delta_acl_names = set(get_acl(reserve_delta).keys())
+#     common_acl_names = act_delta_acl_names & res_delta_acl_names
+#     act_only_acl_names = act_delta_acl_names - res_delta_acl_names
+#     res_only_acl_names = res_delta_acl_names - act_delta_acl_names 
+
+#     return common_acl_names, act_only_acl_names, res_only_acl_names
+
+def create_acl_changes(active_config: list, reserve_config: list, active_delta: list, reserve_delta: list) -> list:
+    change = []
+
     act_delta_acl_names = set(get_acl(active_delta).keys())
     res_delta_acl_names = set(get_acl(reserve_delta).keys())
-    common_acl_names = act_delta_acl_names & res_delta_acl_names
     act_only_acl_names = act_delta_acl_names - res_delta_acl_names
     res_only_acl_names = res_delta_acl_names - act_delta_acl_names 
 
-    return common_acl_names, act_only_acl_names, res_only_acl_names
+    common_acl_names_in_delta = act_delta_acl_names & res_delta_acl_names
+    all_delta_acl_names = act_delta_acl_names | res_delta_acl_names
 
-def create_acl_changes(active_config: list, active_delta: list, reserve_delta: list):
-    all_acl_dict = get_acl(active_config)
-    common_acl_names, act_only_acl_names, res_only_acl_names = get_acl_names_from_delta(active_delta, reserve_delta)
-     
+    all_acl_act_dict = get_acl(active_config)
+    all_acl_res_dict = get_acl(reserve_config)
 
-def create_commands(active_config: list, active_delta: list, reserve_delta: list):
-    commands = active_only_commands(active_delta, reserve_delta)
-    acl_commands = create_acl(active_config, active_delta)
-    no_commands = negate_reserve_only_commands(active_delta, reserve_delta)
+    for name in all_delta_acl_names:
+        if (name in act_delta_acl_names) and (name not in all_acl_res_dict.keys()):
+            # если ACL есть только на активном контексте, то можно просто перенести его на резервный
+            # случай обрабатывается в функции acls_to_be_created
+            continue
+        elif (name in res_delta_acl_names) and (name not in all_acl_act_dict.keys()):
+            # если ACL есть только на резервном контексте, их нужно удалить
+            # случай обрабатывается в функции acls_to_be_removed
+            continue
+        else:
+        # elif name in common_acl_names_in_delta:
+            # если ACL есть на обоих контекстах и их состав различается
+
+            acl_act_lines = all_acl_act_dict.get(name)
+            acl_res_lines = all_acl_res_dict.get(name)
+            if len(acl_act_lines) == 1:
+                # когда в ACL одна строка и она отличается, нужно сначала добавить новую, а потом удалить старую
+                change += [acl_act_lines[0]]
+                change += [f'no {acl_res_lines[0]}'] 
+                continue
+            
+            
+            for i in range(len(acl_act_lines)):
+                if i <= len(acl_res_lines):
+                    # каждая строка проверяется, пока не найдется различие или не закончатся строки на резервном
+                    if acl_act_lines[i].strip() == acl_res_lines[i].strip():
+                        # одинаковые строки пропускаются
+                        continue
+                    else:
+                        # если нашлось расхождение
+                        # сначала нужно удалить строки, т. к. могут быть дубликаты 
+                        change += [f'no {line}' for line in acl_res_lines[i::]] 
+
+                        # добавляем все оставшиеся с активного
+                        change += acl_act_lines[i::]
+                        break
+            if i <= len(acl_res_lines):
+                # если все прошедшие строки равны и на резервном контексте больше строк, чем на активном, оставшиеся нужно удалить
+                i += 1
+                change += [f'no {line}' for line in acl_res_lines[i::]]
+                    
+    return change
+
+
+
+
+
+def create_commands(active_config: list, reserve_config: list, active_delta: list, reserve_delta: list):
+    commands = active_only_commands(active_config, reserve_config, active_delta, reserve_delta)
+    # acl_commands = create_acl(active_config, active_delta)
+    acl_changes = create_acl_changes(active_config, reserve_config, active_delta, reserve_delta)
+    no_commands = negate_reserve_only_commands(active_config, reserve_config, active_delta, reserve_delta)
     atomic_changes = intersection(active_delta, reserve_delta)
     
-    return commands + acl_commands + no_commands + atomic_changes
+    # return commands + acl_commands + no_commands + atomic_changes
+    return commands + acl_changes + no_commands + atomic_changes
 
 if __name__ == '__main__':
 
-    active_delta = """!
-object-group protocol obj_prot0
- description test_og_prot
- protocol-object icmp
- protocol-object tcp
-!
-object-group protocol act_only
- description test_og_prot
-!""".splitlines()
+    active_config = """!
+access-list both extended permit ip any any time-range a
+access-list both extended permit ip any any time-range b
+access-list both extended permit ip any any time-range c
+""".splitlines()
 
+    reserve_config = """!
+access-list both extended permit ip any any time-range a
+access-list both extended permit ip any any time-range b
+access-list both extended permit ip any any time-range c
+access-list both extended permit ip any any time-range d
+access-list both extended permit ip any any time-range e
+""".splitlines()
+
+    active_delta = []
 
     reserve_delta = """!
-object-group protocol res_only
- description test_og_prot
-!
-object-group protocol obj_prot0
- description test_og_prot
- protocol-object udp
- protocol-object tcp
-!""".splitlines()
+access-list both extended permit ip any any time-range d
+access-list both extended permit ip any any time-range e
+""".splitlines()
 
-
-    pprint(intersection(active_delta, reserve_delta))
+    x = create_acl_changes(active_config, reserve_config, active_delta, reserve_delta)
+    print(x)
+    # pprint(intersection(active_delta, reserve_delta))
     # commands = create_commands(active_delta, reserve_delta)
     # print("\n".join(commands))
