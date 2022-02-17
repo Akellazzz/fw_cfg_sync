@@ -1,7 +1,7 @@
 from ciscoconfparse import CiscoConfParse
 from loguru import logger
 from pprint import pprint
-from find_delta import get_parser_config, block_parser, get_uniq
+from .find_delta import get_parser_config, block_parser, get_uniq
 import yaml
 import os
 
@@ -59,8 +59,6 @@ def active_only_commands(active_delta: list, reserve_delta: list) -> list:
             if act_parent_and_children.ioscfg and act_parent not in res_parents:
                 # если в активном контексте есть блоки с parent, которых нет на резервном, добавляет их в конфиг вместе с children
                 commands += act_parent_and_children.ioscfg
-    if commands:
-        commands.append('!')
     return commands
 
 
@@ -94,9 +92,6 @@ def negate_reserve_only_commands(active_delta: list, reserve_delta: list) -> lis
     result = []
     for list_ in negate_commands:
         result += list_ 
-
-    if result:
-        result.append('!')
 
     return result 
 
@@ -138,10 +133,11 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
         active_block_commands_list = []
         for block in act_blocks:
             active_block_commands_list += block.ioscfg 
-
         for act_block in act_blocks:
+            # breakpoint()
             act_parent = act_block.text
             if act_parent in res_parents:
+
                 index = res_parents.index(act_parent)
                 res_block = res_blocks[index]
                 act_block_parse = CiscoConfParse(act_block.ioscfg, template)
@@ -153,21 +149,17 @@ def intersection(active_delta: list, reserve_delta: list) -> list:
                     intersection = res_block_parse.sync_diff(act_block.ioscfg, '')
                     if intersection:
 
-                        if len(intersection) > 2:
-                            cmd_tmp_list = [intersection[0]] # parent
-                            for cmd in intersection[1::]:
-                                if cmd in cmd_tmp_list:
-                                    continue
-                                else:
-                                    cmd_tmp_list.append(cmd)
-                                # elif cmd.strip().startswith('no '):
-
+                        if len(intersection) > 1:
+                            intersection = list(dict.fromkeys(intersection)) # Remove Duplicates
+                            cmd_tmp_list = [] 
+                            parent = intersection[0] # parent
+                            children = intersection[1::]
+                            children = sorted(children, key=lambda a: a.strip().startswith('no ')) # команды на удаление в конец списка
+                            cmd_tmp_list = [parent] + children
 
                             commands += cmd_tmp_list
                         else:
                             commands += intersection
-    if commands:
-        commands.append('!')
 
     return commands
 
@@ -200,10 +192,11 @@ def create_acl(active_config: list, active_delta: list) -> list:
 
 def create_commands(active_delta, reserve_delta):
     commands = active_only_commands(active_delta, reserve_delta)
+    acl_commands = create_acl(active_delta, reserve_delta)
     no_commands = negate_reserve_only_commands(active_delta, reserve_delta)
     atomic_changes = intersection(active_delta, reserve_delta)
     
-    return commands + no_commands + atomic_changes
+    return commands + acl_commands + no_commands + atomic_changes
 
 if __name__ == '__main__':
 
