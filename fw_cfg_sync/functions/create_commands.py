@@ -305,9 +305,6 @@ def create_acl_changes(active_config: list, reserve_config: list, active_delta: 
     return change
 
 
-
-
-
 def create_commands(active_config: list, reserve_config: list, active_delta: list, reserve_delta: list):
     commands = active_only_commands(active_config, reserve_config, active_delta, reserve_delta)
     # acl_commands = create_acl(active_config, active_delta)
@@ -317,6 +314,7 @@ def create_commands(active_config: list, reserve_config: list, active_delta: lis
     
     # return commands + acl_commands + no_commands + atomic_changes
     return commands + acl_changes + no_commands + atomic_changes
+
 
 if __name__ == '__main__':
 
