@@ -6,8 +6,7 @@ from pprint import pprint
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." / "functions"))
 # print(str(Path(__file__) / ".." / ".." / ".." / "functions"))
-from ...functions.create_commands import intersection, get_acl, create_acl
-
+from ...functions.create_commands import intersection, get_acl, create_acl, create_commands, acls_to_be_removed, acls_to_be_created
 
 active_delta = """!
 object-group protocol obj_prot0
@@ -108,3 +107,86 @@ object-group network og0
     # print(commands)
     assert commands == ['object-group network og0', ' network-object host 1.1.1.111', ' no network-object host 1.1.1.1', ' no network-object host 1.1.1.2', ' no network-object host 1.1.1.4', ' no network-object 10.1.1.0 255.255.255.0']
 
+def test_create_commands():
+    act_backup = """!
+access-list both_with_diff extended permit ip any any time-range tr0
+access-list both_with_diff extended permit ip any any time-range act_diffffffff
+access-list both_with_diff extended permit ip any any time-range tr2
+access-list act_only extended deny ip object-group og0 host 8.8.8.8
+access-list act_only extended deny ip object-group og1 host 8.8.8.8
+!
+object-group protocol obj_prot0
+ description test_og_prot
+ protocol-object icmp
+!
+object-group protocol act_only
+ description test_og_prot
+!""".splitlines()
+
+    active_delta = """!
+access-list both_with_diff extended permit ip any any time-range act_diffffffff
+access-list act_only extended deny ip object-group og0 host 8.8.8.8
+access-list act_only extended deny ip object-group og1 host 8.8.8.8
+!
+object-group protocol act_only
+ description test_og_prot
+""".splitlines()
+
+    reserve_delta = """!
+access-list both_with_diff extended permit ip any any time-range res_diffffffff
+access-list res_only extended deny ip object-group og2 host 8.8.8.8
+object-group network res_only
+ network-object 10.1.1.0 255.255.255.0
+""".splitlines()
+
+    commands = create_commands(act_backup, active_delta, reserve_delta)
+    assert " both " not in commands
+    for line in commands:
+        if 'res_only' in line:
+            assert line.strip().startswith('no ')
+    # print('\n'.join(commands))
+
+def test_acls_to_be_removed():
+
+    active_delta = """!
+access-list both_with_diff extended permit ip any any time-range act_diffffffff
+access-list act_only extended deny ip object-group og0 host 8.8.8.8
+access-list act_only extended deny ip object-group og1 host 8.8.8.8
+!
+object-group protocol act_only
+ description test_og_prot
+""".splitlines()
+
+    reserve_delta = """!
+access-list both_with_diff extended permit ip any any time-range res_diffffffff
+access-list res_only extended deny ip object-group og2 host 8.8.8.8
+object-group network res_only
+ network-object 10.1.1.0 255.255.255.0
+""".splitlines()
+
+    commands = acls_to_be_removed(active_delta, reserve_delta)
+    assert ['no access-list res_only extended deny ip object-group og2 host 8.8.8.8'] == commands
+    # print('\n'.join(commands))
+
+def test_acls_to_be_created():
+
+    active_delta = """!
+access-list both_with_diff extended permit ip any any time-range act_diffffffff
+access-list act_only extended deny ip object-group og0 host 8.8.8.8
+access-list act_only extended deny ip object-group og1 host 8.8.8.8
+!
+object-group protocol act_only
+ description test_og_prot
+""".splitlines()
+
+    reserve_delta = """!
+access-list both_with_diff extended permit ip any any time-range res_diffffffff
+access-list res_only extended deny ip object-group og2 host 8.8.8.8
+object-group network res_only
+ network-object 10.1.1.0 255.255.255.0
+""".splitlines()
+
+    commands = acls_to_be_created(active_delta, reserve_delta)
+    assert ['access-list act_only extended deny ip object-group og0 host 8.8.8.8', 'access-list act_only extended deny ip object-group og1 host 8.8.8.8'] == commands
+    # print('\n'.join(commands))
+    # print(commands)

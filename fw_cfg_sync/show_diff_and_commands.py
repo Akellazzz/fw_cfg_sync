@@ -34,6 +34,13 @@ def getargs():
         help="файл с конфигурацией для сравнения",
         required=True,
     )
+    parser.add_argument(
+        "-act",
+        dest="act_backup",
+        type=str,
+        help="бэкап активного контекста",
+        required=True,
+    )
     return parser.parse_args()
 
 
@@ -47,6 +54,7 @@ def main():
 
     file1 = args.file1
     file2 = args.file2
+    act_backup = args.act_backup
     uniq_in_file1, uniq_in_file2 = find_delta(file1, file2)
 
     if uniq_in_file1:
@@ -62,7 +70,7 @@ def main():
     if uniq_in_file1 or uniq_in_file2:
         print(f"Если file1 брать за эталон, то для file2 команды:")
 
-        pprint(create_commands(uniq_in_file1.splitlines(), uniq_in_file2.splitlines()))
+        pprint(create_commands(act_backup.splitlines(), uniq_in_file1.splitlines(), uniq_in_file2.splitlines()))
 
 if __name__ == "__main__":
     main()
