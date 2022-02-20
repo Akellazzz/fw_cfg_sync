@@ -1,9 +1,10 @@
+from typing import Optional
 from ciscoconfparse import CiscoConfParse
 from loguru import logger
 from pprint import pprint
 # from .find_delta import get_parser_config, block_parser, get_uniq
 # from find_delta import get_parser_config, block_parser, get_uniq
-from functions.find_delta import get_parser_config, block_parser, get_uniq
+from functions.find_delta import get_parser_config, block_parser
 import yaml
 import os
 
@@ -122,20 +123,20 @@ def intersection(active_config: list, reserve_config: list, active_delta: list, 
                     continue
                 else:
 
-                    intersection = res_block_parse.sync_diff(act_block.ioscfg, '')
-                    if intersection:
+                    block_intersection = res_block_parse.sync_diff(act_block.ioscfg, '')
+                    if block_intersection:
 
-                        if len(intersection) > 1:
-                            intersection = list(dict.fromkeys(intersection)) # Remove Duplicates
+                        if len(block_intersection) > 1:
+                            intersection = list(dict.fromkeys(block_intersection)) # Remove Duplicates
                             cmd_tmp_list = [] 
-                            parent = intersection[0] # parent
-                            children = intersection[1::]
+                            parent = block_intersection[0] # parent
+                            children = block_intersection[1::]
                             children = sorted(children, key=lambda a: a.strip().startswith('no ')) # команды на удаление в конец списка
                             cmd_tmp_list = [parent] + children
 
                             commands += cmd_tmp_list
                         else:
-                            commands += intersection
+                            commands += block_intersection
 
     return commands
 
@@ -293,44 +294,68 @@ def create_commands(active_config: list, reserve_config: list, active_delta: lis
     return commands + no_commands + atomic_changes
 
 
-if __name__ == '__main__':
 
-    active_config = """!
-access-list both extended permit ip any any time-range a
-access-list both extended permit ip any any time-range b
-access-list both extended permit ip any any time-range c
-object-group protocol obj_prot0
- description test_og_prot
- protocol-object udp
-""".splitlines()
+def create_commands_from_files(active_config: str, reserve_config: str, active_delta: Optional[str], reserve_delta: Optional[str]):
+    ''' Ожидает на вход пути к файлам и формирует список команд для отправки на резервный контекст'''
 
-    active_delta = """!
-access-list both extended permit ip any any time-range a
-access-list both extended permit ip any any time-range b
-object-group protocol obj_prot0
- description test_og_prot
- protocol-object udp
-""".splitlines()
 
-    reserve_delta = """!
-access-list both extended permit ip any any time-range d
-access-list both extended permit ip any any time-range e
-object-group protocol obj_prot0
- description test_og_prot
- protocol-object tcp
-""".splitlines()
+    with open(active_config) as act:
+        act_config_list = act.readlines()
+        act_config_list = [i.rstrip() for i in act_config_list]
+    with open(reserve_config) as res:
+        res_config_list = res.readlines()
+        res_config_list = [i.rstrip() for i in res_config_list]
+    if active_delta:
+        with open(active_delta) as act_delta:
+            act_delta_list = act_delta.readlines()
+            act_delta_list = [i.rstrip() for i in act_delta_list]
+    else:
+        act_delta_list = []
+    if reserve_delta:
+        with open(reserve_delta) as res_delta:
+            res_delta_list = res_delta.readlines()
+            res_delta_list = [i.rstrip() for i in res_delta_list]
+    else:
+        res_delta_list = []
+    commands = create_commands(act_config_list, res_config_list, act_delta_list, res_delta_list)
 
-    reserve_config = """!
-access-list both extended permit ip any any time-range d
-access-list both extended permit ip any any time-range e
-access-list both extended permit ip any any time-range c
-object-group protocol obj_prot0
- description test_og_prot
- protocol-object tcp
-""".splitlines()
 
-    x = create_commands(active_config, reserve_config, active_delta, reserve_delta)
-    pprint(x)
-    # pprint(intersection(active_delta, reserve_delta))
-    # commands = create_commands(active_delta, reserve_delta)
-    # print("\n".join(commands))
+    return commands 
+
+
+def create_commands_for_reserve_context(firewalls, datetime_now) :
+    
+    common_contexts = set(firewalls[0].contexts).intersection(set(firewalls[1].contexts))
+    for context in common_contexts:
+
+            if firewalls[0].contexts[context].get("role") == 'active' and firewalls[1].contexts[context].get("role") == 'reserve':
+                active = firewalls[0]
+                reserve = firewalls[1]
+            elif firewalls[0].contexts[context].get("role") == 'reserve' and firewalls[1].contexts[context].get("role") == 'active':
+                active = firewalls[1]
+                reserve = firewalls[0]
+            else:
+                raise
+
+            active_config =active.contexts[context].get('backup_path')
+            reserve_config = reserve.contexts[context].get('backup_path')
+            active_delta = active.contexts[context].get('delta_path')
+            reserve_delta = reserve.contexts[context].get('delta_path')
+            if active_delta or reserve_delta:
+                commands_for_reserve_context = create_commands_from_files(active_config, reserve_config, active_delta, reserve_delta)
+                # print(commands_for_reserve_context)
+                backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
+
+                commands_filename = (f'{reserve.name}-{context}_{datetime_now}_commands.txt')
+                commands_fullpath = os.path.join(backup_dir, reserve.name, commands_filename)
+                with open(commands_fullpath, "w") as f:
+                    f.write('\n'.join(commands_for_reserve_context))
+                logger.info(
+                    f"Команды для {reserve.name}-{context} сохранены в файл {commands_fullpath}"
+                )
+                reserve.contexts[context]["commands_path"] = commands_fullpath
+            else:
+                logger.info(
+                    f"Команды для контекста {reserve.name}-{context} не созданы, т. к. отсутствует дельта"
+                )
+

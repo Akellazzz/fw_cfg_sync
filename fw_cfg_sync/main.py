@@ -5,6 +5,7 @@ from functions.load_config import load_inventory, load_mail_config
 from functions.send_mail import send_mail
 from functions.find_delta import create_diff_files
 from functions.check_context_role import check_context_role
+from functions.create_commands import create_commands_for_reserve_context
 from argparse import ArgumentParser, RawTextHelpFormatter
 from datetime import datetime
 from loguru import logger
@@ -187,11 +188,13 @@ def main():
     # )
     firewalls = create_diff_files(firewalls, datetime_now)
 
+    create_commands_for_reserve_context(firewalls, datetime_now)            
     for fw in firewalls:
         for context in fw.contexts:
             if fw.contexts[context].get('delta_path'):
                 attached_files.append(fw.contexts[context].get('delta_path'))
-
+            if fw.contexts[context].get('commands_path'):
+                attached_files.append(fw.contexts[context].get('commands_path'))
     # for fw in firewalls:
     #     mail_text += f'{msg}<br>'
 
