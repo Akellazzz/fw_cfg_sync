@@ -1,6 +1,5 @@
 import os
 import sys
-from this import d
 from functions.connections import BaseConnection, Multicontext
 from functions.load_config import load_inventory, load_mail_config
 from functions.send_mail import send_mail
@@ -133,16 +132,27 @@ def main():
 
     for fw in firewalls:
         fw.get_contexts()
-        if sorted(inv.contexts_role_check) != sorted(fw.contexts):
-            msg = f'В inventory заданы контексты {sorted(inv.contexts_role_check)}, но на МСЭ {fw.name} найдены контексты {sorted(fw.contexts)}'
-            mail_text += f'{msg}<br>'
+        inv_contexts = sorted(inv.contexts_role_check)
+        if inv_contexts != sorted(fw.contexts):
+            msg = f'Список контекстов в inventory: {inv_contexts} не совпадает со списком контекстов на МСЭ {fw.name}: {sorted(fw.contexts)}'
+            # mail_text += f'{msg}<br>'
             logger.warning(msg)
 
-        if not (set(fw.contexts).issubset(set(inv.contexts_role_check))):
-            # TODO описать ошибку
-            logger.warning("set(inv.contexts_role_check) not in set(fw.contexts)")
-            logger.warning(f"{set(inv.contexts_role_check)} not in {set(fw.contexts)}")
-            sys.exit()
+            if inv.prerequisites.get('inventory_must_contain_all_contexts'):
+                logger.warning('В app_config флаг inventory_must_contain_all_contexts: True - Выход')
+                sys.exit()
+            else:
+                msg = f'Скрипт продолжит работу с контекстами {inv_contexts}'
+                logger.warning(msg)
+                fw.contexts = dict.fromkeys(inv_contexts)
+
+
+
+        # if not (set(fw.contexts).issubset(set(inv.contexts_role_check))):
+        #     # TODO описать ошибку
+        #     logger.warning("set(inv.contexts_role_check) not in set(fw.contexts)")
+        #     logger.warning(f"{set(inv.contexts_role_check)} not in {set(fw.contexts)}")
+        #     sys.exit()
 
     if set(firewalls[0].contexts) ^ set(firewalls[1].contexts):
         # Разные контексты 
