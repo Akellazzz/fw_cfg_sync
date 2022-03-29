@@ -1,9 +1,6 @@
-from copy import deepcopy
-import yaml
-from functions.send_mail import send_mail
+def check_context_role(firewalls, routers, inv):
+    """ устанавливает роль контекста"""
 
-
-def check_context_role(environment, app_config, firewalls, routers, inv):
     error = ""
             
     for context in firewalls[0].contexts:

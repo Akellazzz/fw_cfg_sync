@@ -2,7 +2,7 @@
 
 Пример: 
 
-find_diff.py -i -f1 tests\fw_configs_for_tests\active_cfg_file.txt -f2 tests\fw_configs_for_tests\active_cfg_file_changed.txt
+show_diff.py -i -f1 tests\fw_configs_for_tests\active_cfg_file.txt -f2 tests\fw_configs_for_tests\active_cfg_file_changed.txt
 """
 
 import time

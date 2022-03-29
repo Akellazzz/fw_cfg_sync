@@ -52,7 +52,7 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
 
     Returns
     -------
-    Два кортежа с уникальными для МСЭ 1 и МСЭ 2 командами
+    Дельты для МСЭ 1 и МСЭ 2 
 
     """
     file1_result = ""
@@ -98,7 +98,7 @@ def create_diff_files(firewalls, datetime_now) -> set:
                 backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
                 role = fw.contexts[context]["role"]
                 delta = fw.contexts[context]["delta"]
-                delta_filename = (f'{fw.name}-{context}_{datetime_now}_{fw.contexts[context]["role"]}_delta.txt')
+                delta_filename = (f'{fw.name}-{context}_{datetime_now}_{role}_delta.txt')
                 delta_fullpath = os.path.join(backup_dir, fw.name, delta_filename)
 
                 with open(delta_fullpath, "w") as f:
@@ -113,65 +113,5 @@ def create_diff_files(firewalls, datetime_now) -> set:
                 f"Конфигурации контекста {context} МСЭ {firewalls[0].name}/{firewalls[1].name} равны"
             )
 
-        # uniq_in_active, uniq_in_reserve = find_delta(
-        #     active_fw.contexts[context]["backup_path"],
-        #     reserve_fw.contexts[context]["backup_path"],
-        # )
-
-        # if uniq_in_reserve:
-        #     logger.info(
-        #         f"На резервном МСЭ {reserve_fw.name}-{context} найдены команды, которых нет на активном МСЭ"
-        #     )
-
-        #     logger.debug(f"{uniq_in_reserve}")
-
-        #     uniq_in_reserve_filename = (
-        #         f'{reserve_fw.name}' + "_" + context + "_" + datetime_now + "_reserve_delta.txt"
-        #     )
-
-        #     reserve_delta = os.path.join(
-        #         backup_dir, active_fw.name, uniq_in_reserve_filename
-        #     )
-
-        #     with open(reserve_delta, "w") as f:
-        #         f.write(uniq_in_reserve)
-        #         logger.info(
-        #             f"Дельта сохранена в файл {reserve_delta}"
-        #         )
-
-
-        # if uniq_in_active:
-        #     logger.info(
-        #         f"На активном МСЭ {active_fw.name}-{context} найдены команды, которых нет на резервном МСЭ"
-        #     )
-
-        #     logger.debug(f"{uniq_in_active}")
-
-        #     uniq_in_active_filename = (
-        #         f'{active_fw.name}' + "_" + context + "_" + datetime_now + "_active_delta.txt"
-        #     )
-
-        #     active_delta = os.path.join(
-        #         backup_dir, reserve_fw.name, uniq_in_active_filename
-        #     )
-
-        #     with open(active_delta, "w") as f:
-        #         f.write(uniq_in_active)
-        #         logger.info(
-        #             f"Дельта сохранена в файл {active_delta}"
-        #         )
-
-
-        # if (not uniq_in_reserve) and (not uniq_in_active):
-        #     logger.info(
-        #         f"Конфигурации контекста {context} МСЭ {active_fw.name}/{reserve_fw.name} равны"
-        #     )
-
     return firewalls
 
-
-# file1_uniq, file2_uniq = find_delta(
-#     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-27_16-06-31.txt",
-#     "C:\\Users\\eekosyanenko\\Documents\\fw_cfg_sync\\fw_configs\\asa2\\test1_2022-01-25_18-51-21.txt",
-# )
-# pass

@@ -3,19 +3,23 @@ prerequisites:
   check_description: False
   description: 
   check_route: True
-  route: 1.1.1.1 255.255.255.0
+  # route: 1.1.1.1 255.255.255.0
 contexts_role_check:
   test1:
     device: asa1
     command: show route
-    find_string: 0.0.0.0
-    site: active
+    # find_string: 0.0.0.0
+    is_active: 0.0.0.0
+    is_reserve: 1.1.1.1
+    # site: active
     # site: reserve
   test2:
     device: asa1
     command: show route
-    find_string: 0.0.0.0
-    site: active
+    # find_string: 0.0.0.0
+    is_active: 0.0.0.0
+    is_reserve: 1.1.1.1
+    # site: active
     # site: reserve
 devices:
   fw_a:
@@ -23,9 +27,8 @@ devices:
     device_function: fw
     connection:
       device_type: cisco_asa
-      # host: 192.168.89.111
       host: 192.168.80.115
-      username: aaa
+      credentials: cfgsync_dev
       fast_cli: False
       # password: aaa
       enable_required: True
@@ -34,9 +37,8 @@ devices:
     device_function: fw
     connection:
       device_type: cisco_asa
-      # host: 192.168.89.114
-      host: 192.168.80.115
-      username: aaa
+      host: 192.168.80.116
+      credentials: cfgsync_dev
       fast_cli: False
       # password: aaa
       enable_required: True
@@ -47,7 +49,7 @@ devices:
       device_type: cisco_asa
       # host: 192.168.89.114
       host: 192.168.80.115
-      username: aaa
+      credentials: cfgsync_dev
       fast_cli: False
       # password: aaa
       enable_required: True

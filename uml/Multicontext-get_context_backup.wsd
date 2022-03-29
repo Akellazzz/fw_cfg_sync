@@ -1,0 +1,20 @@
+@startuml 
+
+title Чтение конфигурации контекста МСЭ 
+
+participant Multicontext order 10
+participant get_context_backup order 20
+participant "fw/context" order 40
+
+Multicontext -> get_context_backup : get_context_backup
+activate get_context_backup 
+
+get_context_backup -> "fw/context" : Get running config
+activate "fw/context"
+get_context_backup <-- "fw/context" 
+destroy "fw/context"
+|||
+get_context_backup --> Multicontext 
+
+deactivate get_context_backup
+@enduml

@@ -44,6 +44,7 @@ class Prerequisites(BaseModel):
     check_description: bool
     description: Optional[str]
     check_route: bool
+    inventory_must_contain_all_contexts: Optional[bool]
     route: Optional[str]  # TODO
 
 

@@ -79,8 +79,8 @@ class BaseConnection:
         try:
             with ConnectHandler(**self.conn) as net_connect:
                 return net_connect.send_command(command)
-        except NetmikoTimeoutException as e:
-            logger.error(f"TCP connection to {self.name} failed")
+        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
+            logger.error(f"{self.name} - {error}")
 
     @logger.catch
     def send_cfg_from_file(self, cfg_file: str):
@@ -88,8 +88,8 @@ class BaseConnection:
         try:
             with ConnectHandler(**self.conn) as net_connect:
                 return net_connect.send_config_from_file(cfg_file)
-        except NetmikoTimeoutException as e:
-            logger.error(f"TCP connection to {self.name} failed")
+        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
+            logger.error(f"{self.name} - {error}")
 
 
 class Multicontext(BaseConnection):
@@ -126,17 +126,16 @@ class Multicontext(BaseConnection):
                 if context:
                     net_connect.send_command(f"changeto context {context}")
                 return net_connect.send_command(command)
-        except NetmikoTimeoutException as e:
-            logger.error(f"TCP connection to {self.name} failed")
+        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
+            logger.error(f"{self.name} - {error}")
 
-    def get_context_backup(self, context):
+    def get_context_backup(self, context, key="config"):
         """Забирает бэкап конфигурации контекста и сохраняет в self.contexts[context]['config']"""
 
         result = self.send_command_to_context(command="show run", context=context)
         if result and result.endswith(": end"):
 
-            # self.contexts[context] = {"config": result}
-            self.contexts[context]["config"] = result
+            self.contexts[context][key] = result
             logger.info(
                 f"С контекста {self.name}-{context} успешно считана конфигурация"
             )
@@ -171,3 +170,21 @@ class Multicontext(BaseConnection):
             logger.info(
                 f"Конфигурация контекста {self.name}-{context} сохранена в файл {full_path}"
             )
+
+    def send_config_set_to_context(self, config_set: list, context: str, datetime_now: str):
+        filename = f'{self.name}-{context}_{datetime_now}_configuration_log.txt'
+
+        # путь к общей директории для сохранения бэкапов МСЭ
+        parent_backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
+
+        # путь к директории для сохранения бэкапов контекстов
+        backup_dir = os.path.join(parent_backup_dir, self.name)
+
+        self.conn['session_log'] = os.path.join(backup_dir, filename)
+        try:
+            with ConnectHandler(**self.conn) as net_connect:
+                net_connect.send_command(f"changeto context {context}")
+                net_connect.send_config_set(config_set, cmd_verify=False)
+
+        except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
+            logger.error(f"{self.name} - {error}")

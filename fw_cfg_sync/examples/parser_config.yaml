@@ -1,48 +1,48 @@
 names: 
-  action: check
+  action: prepare
   template: ^names$
 no_names: 
-  action: check  
+  action: prepare  
   template: ^no\snames$
 name: 
-  action: check  
+  action: prepare  
   template: ^name\s
 object_not_for_nat:
-  action: check  
+  action: prepare  
   template: 
     parentspec: ^object\s
     childspec: ^\snat\s
     find_obj_mode: without
 object_for_nat:
-  action: check  
+  action: prepare  
   template:   
     parentspec: ^object\s
     childspec: ^\snat\s
     find_obj_mode: with
 object-group: 
-  action: check  
+  action: prepare  
   template: ^object-group\s
 time-range: 
-  action: check  
+  action: prepare  
   template: ^time-range\s
 access-list: 
-  action: check  
+  action: prepare  
   template: ^access-list\s
 class-map: 
-  action: check  
+  action: prepare  
   template: ^class-map\s
 flow-export: 
-  action: check  
+  action: prepare  
   template: ^flow-export\s
 policy-map: 
-  action: check  
+  action: prepare  
   template: ^policy-map\s
 service-policy: 
-  action: check  
+  action: prepare  
   template: ^service-policy\s
 access-group: 
-  action: check  
+  action: prepare  
   template: ^access-group\s
 nat: 
-  action: check  
+  action: prepare  
   template: ^nat\s
