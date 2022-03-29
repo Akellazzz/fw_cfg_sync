@@ -43,7 +43,7 @@ def negate_reserve_only_commands(active_config: list, reserve_config: list, acti
     parser_config = get_parser_config()
     for i in parser_config:    
         if i == 'access-list': 
-            negate_commands += acls_to_be_removed(active_config, reserve_config, active_delta, reserve_delta)
+            negate_commands += [acls_to_be_removed(active_config, reserve_config, active_delta, reserve_delta)]
             continue
         block_negate_commands = []
         template = parser_config[i].get("template")
@@ -124,6 +124,24 @@ def intersection(active_config: list, reserve_config: list, active_delta: list, 
                 else:
 
                     block_intersection = res_block_parse.sync_diff(act_block.ioscfg, '')
+                    # в некоторых случаях sync_diff не выдает в результат parent 'policy-map ...'
+                    # Правильное поведение:
+                    # >>> from ciscoconfparse import CiscoConfParse
+                    # >>> a = ['policy-map global_policy', ' class inspection_default', '  inspect ftp ', '  inspect h323 h225 ']
+                    # >>> b = ['policy-map global_policy', ' class inspection_default', '  inspect ftp ']
+                    # >>> p = CiscoConfParse(a)
+                    # >>> diffs = p.sync_diff(b, '')
+                    # >>> diffs
+                    # ['policy-map global_policy', ' class inspection_default', '  no inspect h323 h225 ']
+                    # 
+                    # Неправильное поведение:
+                    # >>> a = ['policy-map global_policy', ' class inspection_default', '  inspect ftp ']
+                    # >>> b = ['policy-map global_policy', ' class inspection_default', '  inspect ftp ', '  inspect h323 h225 ']
+                    # >>> p = CiscoConfParse(a)
+                    # >>> diffs = p.sync_diff(b, '')
+                    # >>> diffs
+                    # [' class inspection_default', '  inspect h323 h225 ']
+
                     if block_intersection:
 
                         if len(block_intersection) > 1:
@@ -335,7 +353,10 @@ def create_commands_for_reserve_context(firewalls, datetime_now) :
                 active = firewalls[1]
                 reserve = firewalls[0]
             else:
-                raise
+                logger.error(
+                    "Ошибка при определении ролей"
+                )
+                raise ValueError("Ошибка при определении ролей")
 
             active_config =active.contexts[context].get('backup_path')
             reserve_config = reserve.contexts[context].get('backup_path')
@@ -343,6 +364,7 @@ def create_commands_for_reserve_context(firewalls, datetime_now) :
             reserve_delta = reserve.contexts[context].get('delta_path')
             if active_delta or reserve_delta:
                 commands_for_reserve_context = create_commands_from_files(active_config, reserve_config, active_delta, reserve_delta)
+                reserve.contexts[context]["commands"] = commands_for_reserve_context
                 # print(commands_for_reserve_context)
                 backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
 

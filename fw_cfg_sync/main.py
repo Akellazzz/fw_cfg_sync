@@ -15,7 +15,7 @@ def getargs():
     modes = ["sync", "check"]
     reports = ["cli", "mail"]
     parser = ArgumentParser(
-        description=f"""Программа синхронизации конфигураций МСЭ между площадками.
+        description=f"""Программа синхронизации конфигураций МСЭ между площадками. 
 Документация - wiki""",
         formatter_class=RawTextHelpFormatter,
     )  # TODO
@@ -33,6 +33,12 @@ def getargs():
         required=True,
     )
 
+    parser.add_argument(
+        "-s", 
+        dest="sync_mode", 
+        help="выравнивание конфигурации резервного контекста (по умолчанию только формируется отчет)", 
+        action="store_true",
+    )
     # parser.add_argument("-m", dest="mode", type=str, help=f"{modes}", required=True)
     # parser.add_argument("-r", dest="report", type=str, help=f"{reports}", required=True)
     return parser.parse_args()
@@ -72,11 +78,10 @@ def main():
     # директория для сохранения логов
     app_log_dir = os.environ.get("FW-CFG-SYNC_LOGDIR")
 
-    # # путь к основной директории
-    # main_dir = os.path.dirname(sys.argv[0])
 
     args = getargs()
     datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
 
     logfilename = f"fw_cfg_sync_{datetime_now}.log"
     logfile = os.path.join(app_log_dir, logfilename)
@@ -84,7 +89,6 @@ def main():
         "handlers": [
             {
                 "sink": logfile,
-                # "sink": f"{logs_dir}" + "/fw_cfg_sync_{time}.log",
                 "retention": "30 days",
                 "backtrace": True,
                 "diagnose": True,
@@ -97,13 +101,13 @@ def main():
         logger.add(sys.stdout, level="DEBUG")
     else:
         logger.add(sys.stdout, format="{message}", level="INFO")
-    # 2022-01-09T19:43:02.912262+0300 INFO No matter added sinks, this message is not displayed
-    # logger.remove()
+
 
     if not app_config_path:
         msg = "В переменных среды не найдена FW-CFG-SYNC_APP_CONFIG, указывающая путь к конфигурации программы"
         logger.error(msg)
         sys.exit(msg)
+
 
     app_config = os.path.join(app_config_path, "app_config.yaml")
     mail_config = load_mail_config(app_config)
@@ -148,13 +152,6 @@ def main():
                 fw.contexts = dict.fromkeys(inv_contexts)
 
 
-
-        # if not (set(fw.contexts).issubset(set(inv.contexts_role_check))):
-        #     # TODO описать ошибку
-        #     logger.warning("set(inv.contexts_role_check) not in set(fw.contexts)")
-        #     logger.warning(f"{set(inv.contexts_role_check)} not in {set(fw.contexts)}")
-        #     sys.exit()
-
     if set(firewalls[0].contexts) ^ set(firewalls[1].contexts):
         # Разные контексты 
         common_contexts = set(firewalls[0].contexts).intersection(set(firewalls[1].contexts))
@@ -169,7 +166,11 @@ def main():
     #         fw.is_active = check_role(context)  # if it's active site sets fw.is_active = True  else False
 
     if inv.prerequisites.get('check_route'):
-        firewalls, error = check_context_role(environment, app_config, firewalls, routers, inv)
+
+        # устанавливает роль контекста
+        # fw.contexts[context] = {"role": "active"}
+        # fw.contexts[context] = {"role": "reserve"}
+        firewalls, error = check_context_role(firewalls, routers, inv)
         if error:
             send_mail(error, files=attached_files, **mail_config.dict())
             sys.exit()
@@ -186,20 +187,55 @@ def main():
     # active_fw, standby_fw, attached_files = create_diff_files(
     #     attached_files, active_fw, standby_fw, datetime_now
     # )
+
+    # если есть дельта, сохраняет ее в fw.contexts[context]["delta"]
+    # и в файл, путь к которому указывается в fw.contexts[context]["delta_path"]
     firewalls = create_diff_files(firewalls, datetime_now)
 
-    create_commands_for_reserve_context(firewalls, datetime_now)            
+    # генерирует команды для выравнивания резервного контекста и добавляет их в fw.contexts[context]["commands"]
+    # путь к файлу с командами сохраняется в fw.contexts[context]["commands_path"]
+    create_commands_for_reserve_context(firewalls, datetime_now)     
+
+
+    # отправка команд для выравнивания конфигурации на контекст резервного МСЭ
+    if args.sync_mode:
+        for fw in firewalls:
+            for context in fw.contexts:
+                config_set = []
+                if fw.contexts[context].get('commands'):
+                    config_set = fw.contexts[context].get('commands')
+                    fw.send_config_set_to_context(config_set, context, datetime_now)
+
+                    filename = f'{fw.name}-{context}_{datetime_now}_configuration_log.txt'
+                    msg = f'Внесены изменения в конфигурацию {fw.name}/{context}. Лог в файле {filename}.'
+                    mail_text += f'{msg}<br>'
+                    logger.warning(msg)
+
+                # вложения в письмо с отчетом
+                if fw.contexts[context].get('delta_path'):
+                    attached_files.append(fw.contexts[context].get('delta_path'))
+                if fw.contexts[context].get('commands_path'):
+                    attached_files.append(fw.contexts[context].get('commands_path'))
+
+        # повторное снятие бэкапа и вычисление дельты после внесения изменений
+        datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        for fw in firewalls:
+            for context in fw.contexts:
+                if fw.contexts[context].get('commands'):
+
+                    fw.get_context_backup(context)
+                    fw.save_backup_to_file(context, datetime_now)
+        firewalls = create_diff_files(firewalls, datetime_now)
+
+
+    # формирование и отправка отчета на почту
     for fw in firewalls:
         for context in fw.contexts:
-            if fw.contexts[context].get('delta_path'):
+            if fw.contexts[context].get('delta_path') and fw.contexts[context].get('delta_path') not in attached_files:
                 attached_files.append(fw.contexts[context].get('delta_path'))
-            if fw.contexts[context].get('commands_path'):
+            if fw.contexts[context].get('commands_path') and fw.contexts[context].get('commands_path') not in attached_files:
                 attached_files.append(fw.contexts[context].get('commands_path'))
-    # for fw in firewalls:
-    #     mail_text += f'{msg}<br>'
 
-    #     for context in fw.contexts:
-    #              mail_text += f'{msg}<br>'
     mail_config.subject = f'Отчет о синхронизации конфигураций {firewalls[0].name} и {firewalls[1].name}'
     send_mail(mail_text, files=attached_files, **mail_config.dict())
     pass

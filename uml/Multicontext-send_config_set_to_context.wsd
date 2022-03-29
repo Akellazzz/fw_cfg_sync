@@ -1,0 +1,24 @@
+@startuml 
+
+title Конфигурирование контекста МСЭ 
+
+participant main order 10
+participant send_config_set_to_context order 20
+participant "fw/context" order 40
+
+main -> send_config_set_to_context : send_config_set_to_context
+activate send_config_set_to_context 
+
+|||
+send_config_set_to_context -> "fw/context" : Send command "changeto context {context}"
+activate "fw/context" 
+send_config_set_to_context <-- "fw/context" 
+|||
+send_config_set_to_context -> "fw/context" : Send config set
+send_config_set_to_context <-- "fw/context" 
+deactivate "fw/context" 
+|||
+send_config_set_to_context --> main 
+
+deactivate send_config_set_to_context
+@enduml

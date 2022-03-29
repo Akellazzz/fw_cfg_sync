@@ -90,7 +90,7 @@ object-group network og10
  network-object 10.1.1.0 255.255.255.0""".splitlines()
 
     commands = intersection(active, reserve, active_delta, reserve_delta)
-    print(commands)
+    # print(commands)
 
     assert commands == ['object-group network og10', ' network-object host 1.1.1.2', ' network-object host 1.1.1.3', ' network-object host 1.1.1.4']
 

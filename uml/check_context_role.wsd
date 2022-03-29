@@ -1,0 +1,23 @@
+@startuml 
+
+title Определение ролей контекстов МСЭ (активный/резервный)
+
+participant main order 10
+participant check_context_role order 20
+participant router order 50
+
+main -> check_context_role : check_context_role
+activate check_context_role 
+
+
+
+check_context_role -> router : Get routing table
+activate router
+check_context_role <-- router 
+destroy router
+|||
+check_context_role -> check_context_role : определение ролей
+
+check_context_role --> main : firewalls, error
+deactivate check_context_role
+@enduml
