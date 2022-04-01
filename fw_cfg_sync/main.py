@@ -11,6 +11,9 @@ from datetime import datetime
 from loguru import logger
 
 
+datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+
 def getargs():
     modes = ["sync", "check"]
     reports = ["cli", "mail"]
@@ -58,11 +61,23 @@ def get_devices_by_function(inv, device_function: str) -> tuple:
             'enable_required': inv.devices[device]["connection"]["enable_required"]}
 
         if inv.multicontext == True:
-            if inv.devices[device]["device_function"] == device_function and device_function == "fw":
+            if inv.devices[device]["device_function"] == device_function  == "fw":
                 devices.append(
                     Multicontext(**kwargs)
                 )
-        if inv.devices[device]["device_function"] == device_function and device_function == "router":
+        if inv.devices[device]["device_function"] == device_function == "router":
+            log_dir = os.environ.get("FW-CFG-SYNC_LOGDIR")
+            router_log_dir = os.path.join(log_dir, kwargs['name'])
+
+
+            if not os.path.exists(router_log_dir):
+                os.mkdir(router_log_dir)
+                logger.info(f"Создана директория {router_log_dir} ")
+
+            filename = f'{kwargs.get("name")}_{datetime_now}.txt'
+
+            kwargs['session_log'] = os.path.join(router_log_dir, filename)
+
             devices.append(BaseConnection(**kwargs))
     return tuple(devices)
 
@@ -80,7 +95,6 @@ def main():
 
 
     args = getargs()
-    datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
     logfilename = f"fw_cfg_sync_{datetime_now}.log"
@@ -218,14 +232,14 @@ def main():
                     attached_files.append(fw.contexts[context].get('commands_path'))
 
         # повторное снятие бэкапа и вычисление дельты после внесения изменений
-        datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        datetime_after_change = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for fw in firewalls:
             for context in fw.contexts:
                 if fw.contexts[context].get('commands'):
 
                     fw.get_context_backup(context)
-                    fw.save_backup_to_file(context, datetime_now)
-        firewalls = create_diff_files(firewalls, datetime_now)
+                    fw.save_backup_to_file(context, datetime_after_change)
+        firewalls = create_diff_files(firewalls, datetime_after_change)
 
 
     # формирование и отправка отчета на почту

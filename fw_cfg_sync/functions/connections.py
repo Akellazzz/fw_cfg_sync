@@ -3,7 +3,6 @@
 BaseConnection - базовый класс
 Multicontext - для взаимодействия с мультиконтекстными МСЭ Cisco ASA
 """
-from datetime import datetime
 from netmiko import (
     ConnectHandler,
     NetmikoTimeoutException,
@@ -27,7 +26,7 @@ class BaseConnection:
 
     # def __init__(self, **kwargs):
     # def __init__(self, name, host, username, fast_cli, enable_required, device_type, device_function):
-    def __init__(self, name, host, credentials, fast_cli, enable_required, device_type, device_function):
+    def __init__(self, name, host, credentials, fast_cli, enable_required, device_type, device_function, session_log = None):
         # self.__dict__.update(kwargs)
         self.conn = {}
         self.name = name
@@ -48,6 +47,8 @@ class BaseConnection:
                 sys.exit()
         self.conn["allow_auto_change"] = False
 
+        if session_log:
+            self.conn["session_log"] = session_log
         self.is_reachable: bool
 
     @logger.catch
