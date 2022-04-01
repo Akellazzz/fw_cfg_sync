@@ -129,6 +129,7 @@ class Multicontext(BaseConnection):
         except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
             logger.error(f"{self.name} - {error}")
 
+    @logger.catch
     def get_context_backup(self, context, key="config"):
         """Забирает бэкап конфигурации контекста и сохраняет в self.contexts[context]['config']"""
 
@@ -143,6 +144,7 @@ class Multicontext(BaseConnection):
         else:
             logger.error(f"Unable to get config from {self.name} - {context}")
 
+    @logger.catch
     def save_backup_to_file(self, context, datetime_now):
         """Сохраняет бэкап конфигурации в файл {имя_МСЭ}_{контекст}_{время}.txt"""
 
@@ -171,6 +173,7 @@ class Multicontext(BaseConnection):
                 f"Конфигурация контекста {self.name}-{context} сохранена в файл {full_path}"
             )
 
+    @logger.catch
     def send_config_set_to_context(self, config_set: list, context: str, datetime_now: str):
         filename = f'{self.name}-{context}_{datetime_now}_configuration_log.txt'
 
@@ -180,7 +183,12 @@ class Multicontext(BaseConnection):
         # путь к директории для сохранения бэкапов контекстов
         backup_dir = os.path.join(parent_backup_dir, self.name)
 
-        self.conn['session_log'] = os.path.join(backup_dir, filename)
+        session_log_path = os.path.join(backup_dir, filename)
+        self.contexts[context]["session_log_path"] = os.path.join(backup_dir, filename)
+
+        # включение логирования
+        self.conn['session_log'] = session_log_path
+        
         try:
             with ConnectHandler(**self.conn) as net_connect:
                 net_connect.send_command(f"changeto context {context}")
@@ -188,3 +196,6 @@ class Multicontext(BaseConnection):
 
         except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
             logger.error(f"{self.name} - {error}")
+
+        # выключение логирования
+        self.conn.pop("session_log", None)

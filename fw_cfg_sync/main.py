@@ -111,7 +111,7 @@ def main():
 
     app_config = os.path.join(app_config_path, "app_config.yaml")
     mail_config = load_mail_config(app_config)
-    mail_text = 'Лог выполнения и дельты конфигов во вложении.'
+    mail_text = 'Лог выполнения и дельты конфигов во вложении.<br>'
     attached_files = [logfile]
 
     inv_path = os.path.join(app_config_path, "inventory", args.filename)
@@ -207,7 +207,7 @@ def main():
                     fw.send_config_set_to_context(config_set, context, datetime_now)
 
                     filename = f'{fw.name}-{context}_{datetime_now}_configuration_log.txt'
-                    msg = f'Внесены изменения в конфигурацию {fw.name}/{context}. Лог в файле {filename}.'
+                    msg = f'Внесены изменения в конфигурацию {fw.name}/{context}. <br>Лог в файле {filename}.'
                     mail_text += f'{msg}<br>'
                     logger.warning(msg)
 
