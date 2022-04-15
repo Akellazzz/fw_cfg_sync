@@ -5,13 +5,36 @@ from functions.load_config import load_inventory, load_mail_config
 from functions.send_mail import send_mail
 from functions.find_delta import create_diff_files
 from functions.check_context_role import check_context_role
-from functions.create_commands import create_commands_for_reserve_context
+from functions.create_commands import create_commands
 from argparse import ArgumentParser, RawTextHelpFormatter
 from datetime import datetime
 from loguru import logger
 
 
 datetime_now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+
+PARENT_DIR = 'FW-CFG-SYNC'
+
+# среда dev/prod
+ENVIRONMENT = os.environ.get(f"{PARENT_DIR}_ENVIRONMENT")
+
+# путь к конфигурации программы
+APP_CONFIG_PATH = os.environ.get(f"{PARENT_DIR}_APP_CONFIG")
+
+# директория для сохранения логов
+APP_LOG_DIR = os.environ.get(f"{PARENT_DIR}_LOGDIR")
+
+# директория для сохранения конфигов МСЭ
+BACKUP_DIR = os.environ.get(f"{PARENT_DIR}_BACKUPS")
+
+
+def check_env_vars():
+    for var in ENVIRONMENT, APP_CONFIG_PATH, APP_LOG_DIR, BACKUP_DIR:
+        if not var:
+            msg = f"В переменных среды не найдена обязательная переменная {var}"
+            logger.error(msg)
+            sys.exit(msg)
 
 
 def getargs():
@@ -66,8 +89,7 @@ def get_devices_by_function(inv, device_function: str) -> tuple:
                     Multicontext(**kwargs)
                 )
         if inv.devices[device]["device_function"] == device_function == "router":
-            log_dir = os.environ.get("FW-CFG-SYNC_LOGDIR")
-            router_log_dir = os.path.join(log_dir, kwargs['name'])
+            router_log_dir = os.path.join(APP_LOG_DIR, kwargs['name'])
 
 
             if not os.path.exists(router_log_dir):
@@ -82,23 +104,59 @@ def get_devices_by_function(inv, device_function: str) -> tuple:
     return tuple(devices)
 
 
+
+def _create_commands_for_reserve_context(firewalls) :
+
+    def read_config(path: str) -> list:
+        with open(path) as f:
+            return [i.rstrip() for i in f.readlines()]
+
+    for context in firewalls[0].contexts:
+
+            if firewalls[0].contexts[context].get("role") == 'active' and firewalls[1].contexts[context].get("role") == 'reserve':
+                active = firewalls[0]
+                reserve = firewalls[1]
+            elif firewalls[0].contexts[context].get("role") == 'reserve' and firewalls[1].contexts[context].get("role") == 'active':
+                active = firewalls[1]
+                reserve = firewalls[0]
+            else:
+                logger.error(
+                    "Ошибка при определении ролей"
+                )
+                raise ValueError("Ошибка при определении ролей")
+
+            active_delta = active.contexts[context].get('delta_path')
+            reserve_delta = reserve.contexts[context].get('delta_path')
+            act_config_list = read_config(active.contexts[context].get('backup_path'))
+            res_config_list = read_config(reserve.contexts[context].get('backup_path'))
+            act_delta_list = read_config(active_delta) if active_delta else []
+            res_delta_list = read_config(reserve_delta) if reserve_delta else []
+           
+            if active_delta or reserve_delta:
+                commands_for_reserve_context = create_commands(act_config_list, res_config_list, act_delta_list, res_delta_list)
+                reserve.contexts[context]["commands"] = commands_for_reserve_context
+                # print(commands_for_reserve_context)
+                
+
+                commands_filename = (f'{reserve.name}-{context}_{datetime_now}_commands.txt')
+                commands_fullpath = os.path.join(BACKUP_DIR, reserve.name, commands_filename)
+                with open(commands_fullpath, "w") as f:
+                    f.write('\n'.join(commands_for_reserve_context))
+                logger.info(
+                    f"Команды для {reserve.name}-{context} сохранены в файл {commands_fullpath}"
+                )
+                reserve.contexts[context]["commands_path"] = commands_fullpath
+            else:
+                logger.info(
+                    f"Команды для контекста {reserve.name}-{context} не созданы, т. к. отсутствует дельта"
+                )
+
+
 def main():
-
-    # среда dev/prod
-    environment = os.environ.get("FW-CFG-SYNC_ENVIRONMENT")
-
-    # путь к конфигурации программы
-    app_config_path = os.environ.get("FW-CFG-SYNC_APP_CONFIG")
-
-    # директория для сохранения логов
-    app_log_dir = os.environ.get("FW-CFG-SYNC_LOGDIR")
-
-
+    check_env_vars()
     args = getargs()
 
-
-    logfilename = f"fw_cfg_sync_{datetime_now}.log"
-    logfile = os.path.join(app_log_dir, logfilename)
+    logfile = os.path.join(APP_LOG_DIR, f"fw_cfg_sync_{datetime_now}.log")
     log_config = {
         "handlers": [
             {
@@ -117,18 +175,11 @@ def main():
         logger.add(sys.stdout, format="{message}", level="INFO")
 
 
-    if not app_config_path:
-        msg = "В переменных среды не найдена FW-CFG-SYNC_APP_CONFIG, указывающая путь к конфигурации программы"
-        logger.error(msg)
-        sys.exit(msg)
-
-
-    app_config = os.path.join(app_config_path, "app_config.yaml")
-    mail_config = load_mail_config(app_config)
+    mail_config = load_mail_config(os.path.join(APP_CONFIG_PATH, "app_config.yaml"))
     mail_text = 'Лог выполнения и дельты конфигов во вложении.<br>'
     attached_files = [logfile]
 
-    inv_path = os.path.join(app_config_path, "inventory", args.filename)
+    inv_path = os.path.join(APP_CONFIG_PATH, "inventory", args.filename)
     inv = load_inventory(inv_path)
 
     firewalls = get_devices_by_function(inv, 'fw')
@@ -141,12 +192,12 @@ def main():
     else:
         devices = firewalls
 
-    if environment != "dev":
+    if ENVIRONMENT != "dev":
         for device in devices:
             device.check_reachability()
             if not device.is_reachable:
                 mail_text += f"Не удалось подключиться к {device.name}"
-                send_mail(mail_text, files=[logfile], **mail_config.dict())
+                send_mail(mail_text, files=attached_files, **mail_config.dict())
                 sys.exit(mail_text)
 
     for fw in firewalls:
@@ -169,9 +220,8 @@ def main():
     if set(firewalls[0].contexts) ^ set(firewalls[1].contexts):
         # Разные контексты 
         common_contexts = set(firewalls[0].contexts).intersection(set(firewalls[1].contexts))
-        common_contexts = sorted(list(common_contexts))
-        firewalls[0].contexts = common_contexts
-        firewalls[1].contexts = common_contexts
+        firewalls[0].contexts = firewalls[1].contexts= sorted(list(common_contexts))
+
         msg = f'На {firewalls[0].name} заданы контексты {firewalls[0].contexts}. На {firewalls[1].name} заданы контексты {firewalls[1].contexts}. В работу взяты общие контекты {common_contexts}'
         mail_text += f'{msg}<br>'
         logger.warning(msg)
@@ -208,7 +258,7 @@ def main():
 
     # генерирует команды для выравнивания резервного контекста и добавляет их в fw.contexts[context]["commands"]
     # путь к файлу с командами сохраняется в fw.contexts[context]["commands_path"]
-    create_commands_for_reserve_context(firewalls, datetime_now)     
+    _create_commands_for_reserve_context(firewalls)     
 
 
     # отправка команд для выравнивания конфигурации на контекст резервного МСЭ

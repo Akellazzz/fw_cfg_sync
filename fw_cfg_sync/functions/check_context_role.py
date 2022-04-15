@@ -21,11 +21,13 @@ def check_context_role(firewalls, routers, inv):
                     if active_sign in response:
                         firewalls[0].contexts[context] = {"role": "active"}
                         logger.info(f'{firewalls[0].name}-{context} - активный')
+
                         firewalls[1].contexts[context] = {"role": "reserve"}
                         logger.info(f'{firewalls[1].name}-{context} - резервный')
                     if reserve_sign in response:
                         firewalls[0].contexts[context] = {"role": "reserve"}
                         logger.info(f'{firewalls[0].name}-{context} - резервный')
+                        
                         firewalls[1].contexts[context] = {"role": "active"}
                         logger.info(f'{firewalls[1].name}-{context} - активный')
 
