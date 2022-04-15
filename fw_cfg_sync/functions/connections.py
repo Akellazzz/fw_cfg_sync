@@ -26,18 +26,28 @@ class BaseConnection:
 
     # def __init__(self, **kwargs):
     # def __init__(self, name, host, username, fast_cli, enable_required, device_type, device_function):
-    def __init__(self, name, host, credentials, fast_cli, enable_required, device_type, device_function, session_log = None):
+    def __init__(
+        self,
+        name,
+        host,
+        credentials,
+        fast_cli,
+        enable_required,
+        device_type,
+        device_function,
+        session_log=None,
+    ):
         # self.__dict__.update(kwargs)
         self.conn = {}
         self.name = name
         self.device_function = device_function
         self.conn["host"] = host
         self.conn["device_type"] = device_type
-        self.conn["username"] = keyring.get_credential(credentials, '').username
+        self.conn["username"] = keyring.get_credential(credentials, "").username
         self.conn["fast_cli"] = fast_cli
-        self.conn["password"] = keyring.get_credential(credentials, '').password
+        self.conn["password"] = keyring.get_credential(credentials, "").password
         if enable_required:
-            enable = keyring.get_credential(credentials + "_enable", '')
+            enable = keyring.get_credential(credentials + "_enable", "")
             if enable:
                 self.conn["secret"] = enable.password
             else:
@@ -151,7 +161,7 @@ class Multicontext(BaseConnection):
 
         # d = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # dirname = os.path.join(os.path.dirname(__file__), "fw_configs")
-        filename = f'{self.name}' + "-" + context + "_" + datetime_now + ".txt"
+        filename = f"{self.name}" + "-" + context + "_" + datetime_now + ".txt"
         # full_path = os.path.join(dirname, filename)
         # main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
 
@@ -175,8 +185,10 @@ class Multicontext(BaseConnection):
             )
 
     @logger.catch
-    def send_config_set_to_context(self, config_set: list, context: str, datetime_now: str):
-        filename = f'{self.name}-{context}_{datetime_now}_configuration_log.txt'
+    def send_config_set_to_context(
+        self, config_set: list, context: str, datetime_now: str
+    ):
+        filename = f"{self.name}-{context}_{datetime_now}_configuration_log.txt"
 
         # путь к общей директории для сохранения бэкапов МСЭ
         parent_backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
@@ -188,8 +200,8 @@ class Multicontext(BaseConnection):
         self.contexts[context]["session_log_path"] = os.path.join(backup_dir, filename)
 
         # включение логирования
-        self.conn['session_log'] = session_log_path
-        
+        self.conn["session_log"] = session_log_path
+
         try:
             with ConnectHandler(**self.conn) as net_connect:
                 net_connect.send_command(f"changeto context {context}")

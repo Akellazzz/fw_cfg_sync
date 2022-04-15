@@ -1,6 +1,7 @@
 import sys
 from pprint import pprint
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".."))
 from functions.create_commands import _create_acl_changes, _get_acl, _acls_to_be_removed
 
@@ -26,11 +27,12 @@ access-list test extended permit ip host host2 any
 
     # breakpoint()
 
-    commands = _create_acl_changes(active_config, reserve_config, active_delta, reserve_delta)
+    commands = _create_acl_changes(
+        active_config, reserve_config, active_delta, reserve_delta
+    )
     pprint(commands)
-    assert commands == ['no access-list test extended permit ip host host2 any']
+    assert commands == ["no access-list test extended permit ip host host2 any"]
     # print('\n'.join(commands))
-
 
 
 def test_create_acl_changes1():
@@ -70,11 +72,17 @@ object-group network res_only
  network-object 10.1.1.0 255.255.255.0
 """.splitlines()
 
-    commands = _create_acl_changes(active_config, reserve_config, active_delta, reserve_delta)
+    commands = _create_acl_changes(
+        active_config, reserve_config, active_delta, reserve_delta
+    )
     pprint(commands)
-    assert commands == ['access-list both_with_diff deny icmp host 1.1.1.1 host 1.1.1.1', 'no access-list both_with_diff extended permit ip any any time-range res_diffffffff', 'access-list both_with_diff extended permit ip any any time-range act_diffffffff', 'no access-list both_with_diff deny icmp host 1.1.1.1 host 1.1.1.1']
+    assert commands == [
+        "access-list both_with_diff deny icmp host 1.1.1.1 host 1.1.1.1",
+        "no access-list both_with_diff extended permit ip any any time-range res_diffffffff",
+        "access-list both_with_diff extended permit ip any any time-range act_diffffffff",
+        "no access-list both_with_diff deny icmp host 1.1.1.1 host 1.1.1.1",
+    ]
     # print('\n'.join(commands))
-
 
 
 def test_create_acl_changes2():
@@ -101,10 +109,14 @@ access-list both extended permit ip any any time-range d
 access-list both extended permit ip any any time-range e
 """.splitlines()
 
-    commands = _create_acl_changes(active_config, reserve_config, active_delta, reserve_delta)
-    assert commands == ['no access-list both extended permit ip any any time-range d', 'no access-list both extended permit ip any any time-range e']
+    commands = _create_acl_changes(
+        active_config, reserve_config, active_delta, reserve_delta
+    )
+    assert commands == [
+        "no access-list both extended permit ip any any time-range d",
+        "no access-list both extended permit ip any any time-range e",
+    ]
     # print('\n'.join(commands))
-
 
 
 def test_get_acl():
@@ -117,10 +129,11 @@ access-list acl_og2 extended deny ip object-group og2 host 8.8.8.8
 access-list acl_og3 extended deny ip object-group og3 host 8.8.8.8 
 !""".splitlines()
 
-
-    test_acl = _get_acl(config).get('test')
-    assert test_acl == ['access-list test extended permit ip any any time-range tr1 ', 'access-list test extended permit ip any any time-range tr49 ']
-    assert _get_acl(config).get('acl_og1') == ['access-list acl_og1 extended deny ip object-group og1 host 8.8.8.8 ']
-
-
-
+    test_acl = _get_acl(config).get("test")
+    assert test_acl == [
+        "access-list test extended permit ip any any time-range tr1 ",
+        "access-list test extended permit ip any any time-range tr49 ",
+    ]
+    assert _get_acl(config).get("acl_og1") == [
+        "access-list acl_og1 extended deny ip object-group og1 host 8.8.8.8 "
+    ]

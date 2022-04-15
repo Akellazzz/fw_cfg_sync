@@ -39,8 +39,8 @@ def test_find_delta2():
 
     file1_uniq, file2_uniq = find_delta(file1, file2)
     # breakpoint()
-    assert file1_uniq == ''
-    assert file2_uniq == 'access-list test extended permit ip host host2 any\n'
+    assert file1_uniq == ""
+    assert file2_uniq == "access-list test extended permit ip host host2 any\n"
 
 
 def test_empty_backup():

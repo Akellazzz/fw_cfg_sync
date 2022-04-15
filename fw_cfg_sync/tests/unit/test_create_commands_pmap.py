@@ -2,10 +2,10 @@ from ciscoconfparse import CiscoConfParse
 import sys
 from pprint import pprint
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." ))
+
+sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".."))
 sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." / "functions"))
 # print(str(Path(__file__) / ".." / ".." / ".." / "functions"))
-
 
 
 def test_create_commands2():
@@ -55,7 +55,7 @@ policy-map global_policy
   inspect sip  
   inspect xdmcp 
 """.splitlines()
-    
+
     res_backup = """!
 class-map inspection_default
  match default-inspection-traffic

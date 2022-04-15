@@ -46,7 +46,6 @@ def getargs():
 def show_diff_and_commands(act_backup, res_backup):
     uniq_in_act_backup, uniq_in_res_backup = find_delta(act_backup, res_backup)
 
-
     if uniq_in_act_backup:
         print(f"\nКоманды только в {act_backup}:\n")
         print(f"{uniq_in_act_backup}")
@@ -65,7 +64,12 @@ def show_diff_and_commands(act_backup, res_backup):
             res_config_list = res.readlines()
             res_config_list = [i.strip() for i in res_config_list]
         print(f"Команды для резервного контекста:")
-        commands = create_commands(act_config_list, res_config_list, uniq_in_act_backup.splitlines(), uniq_in_res_backup.splitlines())
+        commands = create_commands(
+            act_config_list,
+            res_config_list,
+            uniq_in_act_backup.splitlines(),
+            uniq_in_res_backup.splitlines(),
+        )
         pprint(commands)
     return uniq_in_act_backup, uniq_in_res_backup, commands
 
@@ -81,6 +85,7 @@ def main():
     act_backup = args.act_backup
     res_backup = args.res_backup
     show_diff_and_commands(act_backup, res_backup)
+
 
 if __name__ == "__main__":
     main()

@@ -5,17 +5,17 @@ import os
 
 
 def get_parser_config(*args) -> dict:
-    ''' Считывает конфиг парсера из файла, указанного в переменной среды FW-CFG-SYNC_APP_CONFIG
-    
+    """Считывает конфиг парсера из файла, указанного в переменной среды FW-CFG-SYNC_APP_CONFIG
+
     args - фильтры для поля action
 
     Примеры:
     get_parser_config() - все объекты без фильтрации
     get_parser_config('sync') - только объекты c action: sync
-    '''
+    """
 
-    if not set(args).issubset({'find', 'sync'}):
-        raise KeyError(f'Неправильный фильтр {args} для get_parser_config')
+    if not set(args).issubset({"find", "sync"}):
+        raise KeyError(f"Неправильный фильтр {args} для get_parser_config")
 
     app_config_path = os.environ.get("FW-CFG-SYNC_APP_CONFIG")
     config_file = os.path.join(app_config_path, "parser_config.yaml")
@@ -24,7 +24,7 @@ def get_parser_config(*args) -> dict:
     with open(config_file) as f:
         parser_config = yaml.safe_load(f)
     if args:
-        return {k:v for k,v in parser_config.items() if v.get('action') in args}
+        return {k: v for k, v in parser_config.items() if v.get("action") in args}
     else:
         return parser_config
 
@@ -67,7 +67,7 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
 
     Returns
     -------
-    Дельты для МСЭ 1 и МСЭ 2 
+    Дельты для МСЭ 1 и МСЭ 2
 
     """
     file1_result = ""
@@ -96,8 +96,10 @@ def find_delta(file1: str, file2: str) -> tuple[str, str]:
 
 
 def create_diff_files(firewalls, datetime_now) -> set:
-    
-    common_contexts = set(firewalls[0].contexts).intersection(set(firewalls[1].contexts))
+
+    common_contexts = set(firewalls[0].contexts).intersection(
+        set(firewalls[1].contexts)
+    )
     for context in common_contexts:
 
         fw0_delta, fw1_delta = find_delta(
@@ -113,7 +115,7 @@ def create_diff_files(firewalls, datetime_now) -> set:
                 backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
                 role = fw.contexts[context]["role"]
                 delta = fw.contexts[context]["delta"]
-                delta_filename = (f'{fw.name}-{context}_{datetime_now}_{role}_delta.txt')
+                delta_filename = f"{fw.name}-{context}_{datetime_now}_{role}_delta.txt"
                 delta_fullpath = os.path.join(backup_dir, fw.name, delta_filename)
 
                 with open(delta_fullpath, "w") as f:
@@ -129,4 +131,3 @@ def create_diff_files(firewalls, datetime_now) -> set:
             )
 
     return firewalls
-
