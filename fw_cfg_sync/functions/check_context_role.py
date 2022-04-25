@@ -9,12 +9,12 @@ def check_context_role(firewalls, routers, inv):
 
     for context in firewalls[0].contexts:
         for router in routers:
-            if inv.contexts_role_check[context]["device"] == router.name:
+            if inv.contexts[context]["device"] == router.name:
 
-                active_sign = inv.contexts_role_check[context].get("is_active")
-                reserve_sign = inv.contexts_role_check[context].get("is_reserve")
+                active_sign = inv.contexts[context].get("is_active")
+                reserve_sign = inv.contexts[context].get("is_reserve")
 
-                cmd = inv.contexts_role_check[context]["command"]
+                cmd = inv.contexts[context]["command"]
                 response = router.send_command(cmd)
 
                 if active_sign in response or reserve_sign in response:

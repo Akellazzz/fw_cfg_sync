@@ -177,3 +177,27 @@ access-list test extended permit ip host host2 any
     pprint(commands)
     assert commands == ["no access-list test extended permit ip host host2 any"]
     # print('\n'.join(commands))
+
+
+
+def test_create_commands3():
+
+    active_config = """!
+access-list test extended permit ip any any time-range tr1
+access-list test extended permit ip host host1 any
+access-list test extended permit ip host host2 any""".splitlines()
+
+    reserve_config = """!
+access-list test extended permit ip any any time-range tr1
+access-list test extended permit ip host host1 any
+""".splitlines()
+
+    active_delta = "access-list test extended permit ip host host2 any".splitlines()
+
+    reserve_delta = """""".splitlines()
+
+    commands = create_commands(
+        active_config, reserve_config, active_delta, reserve_delta
+    )
+    # breakpoint()
+    assert commands == ["access-list test extended permit ip host host2 any"]

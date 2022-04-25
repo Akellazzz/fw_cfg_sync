@@ -4,7 +4,7 @@ prerequisites:
   description: 
   check_route: True
   # route: 1.1.1.1 255.255.255.0
-contexts_role_check:
+contexts:
   test1:
     device: asa1
     command: show route

@@ -280,7 +280,7 @@ def _create_acl_changes(
             #     continue
 
             for i in range(len(acl_act_lines)):
-                if i <= len(acl_res_lines):
+                if i < len(acl_res_lines):
                     # каждая строка проверяется, пока не найдется различие или не закончатся строки на резервном
                     if acl_act_lines[i].strip() == acl_res_lines[i].strip():
                         # одинаковые строки пропускаются
@@ -293,6 +293,11 @@ def _create_acl_changes(
                         # добавляем все оставшиеся с активного
                         change += acl_act_lines[i::]
                         break
+                elif i == len(acl_res_lines):
+                    # если активный ACL длиннее и до i не было расхождений, то добавляются оставшиеся команды с активного 
+                    change += acl_act_lines[i::]
+                    break
+
             else:
                 if i <= len(acl_res_lines):
                     # если все прошедшие строки равны и на резервном контексте больше строк, чем на активном, оставшиеся нужно удалить

@@ -206,7 +206,13 @@ def main():
 
     for fw in firewalls:
         fw.get_contexts()
-        inv_contexts = sorted(inv.contexts_role_check)
+        if fw.contexts == []:
+            logger.warning(
+                f"Не удалось сформировать список контекстов МСЭ {fw.name}"
+            )
+            sys.exit()
+
+        inv_contexts = sorted(inv.contexts)
         if inv_contexts != sorted(fw.contexts):
             msg = f"Список контекстов в inventory: {inv_contexts} не совпадает со списком контекстов на МСЭ {fw.name}: {sorted(fw.contexts)}"
             # mail_text += f'{msg}<br>'
@@ -271,7 +277,7 @@ def main():
         for fw in firewalls:
             for context in fw.contexts:
                 config_set = []
-                if fw.contexts[context].get("commands"):
+                if fw.contexts[context].get("commands") and inv.contexts.context.get("working_mode") == "sync":
                     config_set = fw.contexts[context].get("commands")
                     fw.send_config_set_to_context(config_set, context, datetime_now)
 
@@ -292,7 +298,7 @@ def main():
         datetime_after_change = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for fw in firewalls:
             for context in fw.contexts:
-                if fw.contexts[context].get("commands"):
+                if fw.contexts[context].get("commands") and inv.contexts.context.get("working_mode") == "sync":
 
                     fw.get_context_backup(context)
                     fw.save_backup_to_file(context, datetime_after_change)

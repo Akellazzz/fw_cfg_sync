@@ -43,6 +43,20 @@ def test_find_delta2():
     assert file2_uniq == "access-list test extended permit ip host host2 any\n"
 
 
+def test_find_delta3():
+    file1 = os.path.join(
+        pytest.tests_dir, "fw_configs_for_tests", "find_delta3_acl_active.txt"
+    )
+    file2 = os.path.join(
+        pytest.tests_dir, "fw_configs_for_tests", "find_delta3_acl_reserve.txt"
+    )
+
+    file1_uniq, file2_uniq = find_delta(file1, file2)
+    # breakpoint()
+    assert file1_uniq == "access-list test extended permit ip host host2 any"
+    assert file2_uniq == ""
+
+
 def test_empty_backup():
     """
     Пустой файл
