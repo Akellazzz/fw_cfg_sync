@@ -56,7 +56,7 @@ class Prerequisites(BaseModel):
 class Config(BaseModel):
     multicontext: bool
     prerequisites: dict
-    contexts_role_check: dict
+    contexts: dict
     devices: dict
 
 
@@ -69,10 +69,12 @@ def load_inventory(file):
             print(exc)
     # print(cfg["prerequisites"])
     # print(cfg["devices"])
-    return Config(prerequisites=cfg.get("prerequisites"), 
-        devices=cfg.get("devices"), 
-        contexts_role_check = cfg.get("contexts_role_check"),
-        multicontext = cfg.get("multicontext"))
+    return Config(
+        prerequisites=cfg.get("prerequisites"),
+        devices=cfg.get("devices"),
+        contexts=cfg.get("contexts"),
+        multicontext=cfg.get("multicontext"),
+    )
 
 
 def load_mail_config(file):

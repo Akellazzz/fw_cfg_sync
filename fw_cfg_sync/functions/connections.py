@@ -3,7 +3,6 @@
 BaseConnection - базовый класс
 Multicontext - для взаимодействия с мультиконтекстными МСЭ Cisco ASA
 """
-from datetime import datetime
 from netmiko import (
     ConnectHandler,
     NetmikoTimeoutException,
@@ -27,18 +26,28 @@ class BaseConnection:
 
     # def __init__(self, **kwargs):
     # def __init__(self, name, host, username, fast_cli, enable_required, device_type, device_function):
-    def __init__(self, name, host, credentials, fast_cli, enable_required, device_type, device_function):
+    def __init__(
+        self,
+        name,
+        host,
+        credentials,
+        fast_cli,
+        enable_required,
+        device_type,
+        device_function,
+        session_log=None,
+    ):
         # self.__dict__.update(kwargs)
         self.conn = {}
         self.name = name
         self.device_function = device_function
         self.conn["host"] = host
         self.conn["device_type"] = device_type
-        self.conn["username"] = keyring.get_credential(credentials, '').username
+        self.conn["username"] = keyring.get_credential(credentials, "").username
         self.conn["fast_cli"] = fast_cli
-        self.conn["password"] = keyring.get_credential(credentials, '').password
+        self.conn["password"] = keyring.get_credential(credentials, "").password
         if enable_required:
-            enable = keyring.get_credential(credentials + "_enable", '')
+            enable = keyring.get_credential(credentials + "_enable", "")
             if enable:
                 self.conn["secret"] = enable.password
             else:
@@ -48,6 +57,8 @@ class BaseConnection:
                 sys.exit()
         self.conn["allow_auto_change"] = False
 
+        if session_log:
+            self.conn["session_log"] = session_log
         self.is_reachable: bool
 
     @logger.catch
@@ -129,6 +140,7 @@ class Multicontext(BaseConnection):
         except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
             logger.error(f"{self.name} - {error}")
 
+    @logger.catch
     def get_context_backup(self, context, key="config"):
         """Забирает бэкап конфигурации контекста и сохраняет в self.contexts[context]['config']"""
 
@@ -143,12 +155,13 @@ class Multicontext(BaseConnection):
         else:
             logger.error(f"Unable to get config from {self.name} - {context}")
 
+    @logger.catch
     def save_backup_to_file(self, context, datetime_now):
         """Сохраняет бэкап конфигурации в файл {имя_МСЭ}_{контекст}_{время}.txt"""
 
         # d = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # dirname = os.path.join(os.path.dirname(__file__), "fw_configs")
-        filename = f'{self.name}' + "-" + context + "_" + datetime_now + ".txt"
+        filename = f"{self.name}" + "-" + context + "_" + datetime_now + ".txt"
         # full_path = os.path.join(dirname, filename)
         # main_dir = os.path.dirname(sys.argv[0])  # путь к главной директории
 
@@ -171,8 +184,11 @@ class Multicontext(BaseConnection):
                 f"Конфигурация контекста {self.name}-{context} сохранена в файл {full_path}"
             )
 
-    def send_config_set_to_context(self, config_set: list, context: str, datetime_now: str):
-        filename = f'{self.name}-{context}_{datetime_now}_configuration_log.txt'
+    @logger.catch
+    def send_config_set_to_context(
+        self, config_set: list, context: str, datetime_now: str
+    ):
+        filename = f"{self.name}-{context}_{datetime_now}_configuration_log.txt"
 
         # путь к общей директории для сохранения бэкапов МСЭ
         parent_backup_dir = os.environ.get("FW-CFG-SYNC_BACKUPS")
@@ -180,7 +196,12 @@ class Multicontext(BaseConnection):
         # путь к директории для сохранения бэкапов контекстов
         backup_dir = os.path.join(parent_backup_dir, self.name)
 
-        self.conn['session_log'] = os.path.join(backup_dir, filename)
+        session_log_path = os.path.join(backup_dir, filename)
+        self.contexts[context]["session_log_path"] = os.path.join(backup_dir, filename)
+
+        # включение логирования
+        self.conn["session_log"] = session_log_path
+
         try:
             with ConnectHandler(**self.conn) as net_connect:
                 net_connect.send_command(f"changeto context {context}")
@@ -188,3 +209,6 @@ class Multicontext(BaseConnection):
 
         except (NetmikoTimeoutException, NetmikoAuthenticationException) as error:
             logger.error(f"{self.name} - {error}")
+
+        # выключение логирования
+        self.conn.pop("session_log", None)

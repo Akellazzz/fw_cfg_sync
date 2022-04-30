@@ -1,15 +1,11 @@
 from ciscoconfparse import CiscoConfParse
-import os
 import sys
-import pytest
 from pprint import pprint
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." ))
+
+sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".."))
 sys.path.insert(0, str(Path(__file__) / ".." / ".." / ".." / "functions"))
 # print(str(Path(__file__) / ".." / ".." / ".." / "functions"))
-# from ...functions.create_commands import intersection, get_acl, create_acl, create_commands, acls_to_be_removed, acls_to_be_created, create_acl_changes
-from functions.create_commands import intersection, create_commands
-
 
 
 def test_create_commands2():
@@ -59,7 +55,7 @@ policy-map global_policy
   inspect sip  
   inspect xdmcp 
 """.splitlines()
-    
+
     res_backup = """!
 class-map inspection_default
  match default-inspection-traffic

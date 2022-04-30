@@ -29,6 +29,34 @@ def test_find_delta():
     assert file1_uniq == file2_uniq
 
 
+def test_find_delta2():
+    file1 = os.path.join(
+        pytest.tests_dir, "fw_configs_for_tests", "find_delta_acl_active.txt"
+    )
+    file2 = os.path.join(
+        pytest.tests_dir, "fw_configs_for_tests", "find_delta_acl_reserve.txt"
+    )
+
+    file1_uniq, file2_uniq = find_delta(file1, file2)
+    # breakpoint()
+    assert file1_uniq == ""
+    assert file2_uniq == "access-list test extended permit ip host host2 any\n"
+
+
+def test_find_delta3():
+    file1 = os.path.join(
+        pytest.tests_dir, "fw_configs_for_tests", "find_delta3_acl_active.txt"
+    )
+    file2 = os.path.join(
+        pytest.tests_dir, "fw_configs_for_tests", "find_delta3_acl_reserve.txt"
+    )
+
+    file1_uniq, file2_uniq = find_delta(file1, file2)
+    # breakpoint()
+    assert file1_uniq == "access-list test extended permit ip host host2 any"
+    assert file2_uniq == ""
+
+
 def test_empty_backup():
     """
     Пустой файл
@@ -101,11 +129,11 @@ def test_acl_order2():
         "time-range tr1",
         " absolute end 00:00 16 December 2025",
         "access-list test extended permit ip any any time-range tr49 ",
-        "access-list test extended permit icmp any any time-range tr49",
-        # "policy-map type inspect dns migrated_dns_map_1",
-        # " parameters",
-        # "  message-length maximum client auto",
-        # "  message-length maximum 512",
+        "access-list test extended permit icmp any any time-range tr49 ",
+        "policy-map type inspect dns migrated_dns_map_1",
+        " parameters",
+        "  message-length maximum client auto",
+        "  message-length maximum 512",
     ]
 
     assert file2_uniq_list == [
@@ -130,19 +158,19 @@ def test_acl_order2():
         "time-range tr1_diff",
         " absolute end 00:00 16 December 2025",
         "access-list test extended permit ip any any time-range tr49_diff ",
-        "access-list test extended permit icmp any any time-range tr49_diff",
-        # "policy-map type inspect dns migrated_dns_map_1",
-        # " parameters",
-        # "  message-length maximum client auto_diff",
-        # "  message-length maximum 512",
-        # "policy-map global_policy_diff",
-        # " class inspection_default",
-        # "  inspect dns migrated_dns_map_1 ",
-        # "  inspect ftp ",
-        # "policy-map global_policy",
-        # " class inspection_default",
-        # "  inspect dns migrated_dns_map_1_diff",
-        # "  inspect ftp",
+        "access-list test extended permit icmp any any time-range tr49_diff ",
+        "policy-map type inspect dns migrated_dns_map_1",
+        " parameters",
+        "  message-length maximum client auto_diff",
+        "  message-length maximum 512",
+        "policy-map global_policy_diff",
+        " class inspection_default",
+        "  inspect dns migrated_dns_map_1 ",
+        "  inspect ftp ",
+        "policy-map global_policy",
+        " class inspection_default",
+        "  inspect dns migrated_dns_map_1_diff",
+        "  inspect ftp",
     ]
 
     """
