@@ -277,7 +277,7 @@ def main():
         for fw in firewalls:
             for context in fw.contexts:
                 config_set = []
-                if fw.contexts[context].get("commands") and inv.contexts.context.get("working_mode") == "sync":
+                if fw.contexts[context].get("commands") and inv.contexts[context].get('working_mode') == "sync":
                     config_set = fw.contexts[context].get("commands")
                     fw.send_config_set_to_context(config_set, context, datetime_now)
 
@@ -298,7 +298,7 @@ def main():
         datetime_after_change = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for fw in firewalls:
             for context in fw.contexts:
-                if fw.contexts[context].get("commands") and inv.contexts.context.get("working_mode") == "sync":
+                if fw.contexts[context].get("commands") and inv.contexts[context].get('working_mode') == "sync":
 
                     fw.get_context_backup(context)
                     fw.save_backup_to_file(context, datetime_after_change)
